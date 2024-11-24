@@ -6,6 +6,7 @@ use App\Student;
 use App\Grade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log; // Log ファサードのインポート
 
 class NewStudentController extends Controller
 {
@@ -42,23 +43,34 @@ class NewStudentController extends Controller
             'grade' => 'required|integer|min:1|max:12',
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 画像のバリデーションを追加
         ]);
-
+    
         $student = new Student();
         $student->name = $request->name;
         $student->address = $request->address;
         $student->email = $request->email;
         $student->grade = $request->grade;
-
+    
         // ファイルアップロード処理
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('photos', 'public');
-            $student->img_path = $path;
+            try {
+                $file = $request->file('photo');
+                $mimeType = $file->getMimeType();
+                Log::info('MIME Type: ' . $mimeType);  // MIMEタイプをログに記録
+                $path = $file->store('photos', 'public');
+                Log::info('File path: ' . $path);  // ファイルパスをログに記録
+                $student->img_path = $path;
+            } catch (\Exception $e) {
+                Log::error('File Upload Error: ' . $e->getMessage());  // エラーメッセージをログに記録
+                Log::error('Trace: ' . $e->getTraceAsString()); // スタックトレースをログに記録
+                return redirect()->back()->withErrors(['photo' => 'ファイルアップロードに失敗しました。']);
+            }
         }
-
+    
         $student->save();
-
+    
         return redirect()->route('students.index')->with('success', '学生情報が登録されました');
     }
+    
 
     public function edit(Student $student)
     {
@@ -104,5 +116,11 @@ class NewStudentController extends Controller
         $student->delete();
         return redirect()->route('students.index');
     }
-}
 
+    // 詳細表示用メソッドの追加
+    public function show(Student $student)
+    {
+        return view('students.show', compact('student'));
+    }
+
+}

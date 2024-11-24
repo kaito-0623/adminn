@@ -18,10 +18,6 @@
             <input type="text" id="address" name="address" required>
         </div>
         <div>
-            <label for="email">メールアドレス:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div>
             <label for="photo">顔写真:</label>
             <input type="file" id="photo" name="photo" accept="image/*" required>
         </div>
