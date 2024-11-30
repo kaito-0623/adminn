@@ -1,8 +1,8 @@
 <?php
-
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Student; // Student クラスのインポート
 
 class Grade extends Model
 {
@@ -18,8 +18,4 @@ class Grade extends Model
         return $this->belongsTo(Student::class);
     }
 }
-
-
-
-
 

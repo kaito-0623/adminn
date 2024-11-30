@@ -1,30 +1,24 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use App\Student;
-use App\Grade;
+use App\Student; // 修正: Student モデルをインポート
+use App\Grade; // 修正: Grade モデルをインポート
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log; // Log ファサードのインポート
+use Illuminate\Support\Facades\Log; // ログをインポート
+
 
 class NewStudentController extends Controller
 {
     public function index(Request $request)
     {
-        $students = Student::query();
+        $students = Student::query()
+            ->filterByName($request->input('name'))
+            ->filterByGrade($request->input('grade'))
+            ->get();
         $grades = Grade::all();
 
-        if ($request->has('name') && $request->input('name') != '') {
-            $students->where('name', 'like', '%' . $request->input('name') . '%');
-        }
-
-        if ($request->has('grade') && $request->input('grade') != '') {
-            $students->where('grade', $request->input('grade'));
-        }
-
         return view('students.index', [
-            'students' => $students->get(),
+            'students' => $students,
             'grades' => $grades,
         ]);
     }
@@ -41,16 +35,12 @@ class NewStudentController extends Controller
             'address' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:students',
             'grade' => 'required|integer|min:1|max:12',
-            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 画像のバリデーションを追加
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // 画像のバリデーションを有効にする
         ]);
-    
+
         $student = new Student();
-        $student->name = $request->name;
-        $student->address = $request->address;
-        $student->email = $request->email;
-        $student->grade = $request->grade;
-    
-        // ファイルアップロード処理
+
+        // 画像のアップロード処理
         if ($request->hasFile('photo')) {
             try {
                 $file = $request->file('photo');
@@ -65,16 +55,11 @@ class NewStudentController extends Controller
                 return redirect()->back()->withErrors(['photo' => 'ファイルアップロードに失敗しました。']);
             }
         }
-    
-        $student->save();
-    
-        return redirect()->route('students.index')->with('success', '学生情報が登録されました');
-    }
-    
 
-    public function edit(Student $student)
-    {
-        return view('students.edit', compact('student'));
+        $student->fill($request->except('photo'));
+        $student->save();
+
+        return redirect()->route('students.index')->with('success', '学生情報が登録されました');
     }
 
     public function update(Request $request, Student $student)
@@ -87,19 +72,12 @@ class NewStudentController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 画像のバリデーションを追加
         ]);
 
-        $student->name = $request->name;
-        $student->address = $request->address;
-        $student->email = $request->email;
-        $student->grade = $request->grade;
+        // 学生データの更新
+        $student->fill($request->except('photo'));
 
-        // ファイルアップロード処理
+        // 画像のアップロード処理
         if ($request->hasFile('photo')) {
-            // 既存の画像を削除
-            if ($student->img_path) {
-                Storage::disk('public')->delete($student->img_path);
-            }
-            $path = $request->file('photo')->store('photos', 'public');
-            $student->img_path = $path;
+            $student->savePhoto($request->file('photo'));
         }
 
         $student->save();
@@ -109,18 +87,15 @@ class NewStudentController extends Controller
 
     public function destroy(Student $student)
     {
-        // 画像の削除
-        if ($student->img_path) {
-            Storage::disk('public')->delete($student->img_path);
-        }
+        // 画像の削除処理
+        $student->deletePhoto();
         $student->delete();
+
         return redirect()->route('students.index');
     }
 
-    // 詳細表示用メソッドの追加
     public function show(Student $student)
     {
         return view('students.show', compact('student'));
     }
-
 }
