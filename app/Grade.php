@@ -7,9 +7,7 @@ use App\Student; // Student クラスのインポート
 class Grade extends Model
 {
     protected $fillable = [
-        'student_id',
-        'subject',
-        'score',
+        'student_id', 'subject', 'score', 'grade', 'term', 'name' // 追加
     ];
 
     // Studentとのリレーションシップを定義
@@ -18,4 +16,3 @@ class Grade extends Model
         return $this->belongsTo(Student::class);
     }
 }
-

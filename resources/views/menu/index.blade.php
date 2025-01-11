@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +11,8 @@
         <ul>
             <li><a href="{{ route('students.create') }}">学生登録</a></li>
             <li><a href="{{ route('students.index') }}">学生表示</a></li>
-            <li><a href="{{ route('grades.update-grades') }}">学年更新</a></li> <!-- カスタムルート名に修正 -->
+            <li><a href="{{ route('schoolGrades.update-grades') }}">学年更新</a></li> <!-- 適切なルートに修正 -->
         </ul>
     </nav>
 </body>
 </html>
-
-

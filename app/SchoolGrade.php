@@ -1,9 +1,7 @@
 <?php
-
-namespace App; // 名前空間の修正
+namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Student; // Student モデルのインポート
 
 class SchoolGrade extends Model
 {
@@ -16,5 +14,3 @@ class SchoolGrade extends Model
         return $this->belongsTo(Student::class);
     }
 }
-
-

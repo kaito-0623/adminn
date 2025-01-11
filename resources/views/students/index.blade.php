@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,8 +18,8 @@
             <label for="grade">学年:</label>
             <select id="grade" name="grade">
                 <option value="">選択してください</option>
-                @foreach($grades as $grade)
-                    <option value="{{ $grade->id }}" {{ request('grade') == $grade->id ? 'selected' : '' }}>{{ $grade->name }}</option>
+                @foreach(['1年生', '2年生', '3年生', '4年生'] as $grade)
+                    <option value="{{ $grade }}" {{ request('grade') == $grade ? 'selected' : '' }}>{{ $grade }}</option>
                 @endforeach
             </select>
         </div>
@@ -35,11 +35,15 @@
         </tr>
         @foreach ($students as $student)
         <tr>
-            <td>{{ $student->grade->name }}</td>
+            <td>{{ $student->grade }}</td>
             <td>{{ $student->name }}</td>
             <td><a href="{{ route('students.show', $student->id) }}">詳細表示</a></td>
         </tr>
         @endforeach
     </table>
+
+    <!-- メニュー画面に戻るボタン -->
+    <button onclick="window.location.href='{{ url('/menu') }}'">戻る</button>
+
 </body>
 </html>

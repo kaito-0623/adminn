@@ -3,9 +3,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log; // ログをインポート
-use App\SchoolGrade; // SchoolGrade クラスのインポート
-use App\Grade; // Grade クラスのインポート
+use Illuminate\Support\Facades\Log;
+use App\SchoolGrade;
 
 class Student extends Model
 {
@@ -78,12 +77,6 @@ class Student extends Model
     // SchoolGrade リレーションシップ
     public function schoolGrades()
     {
-        return $this->hasMany(SchoolGrade::class);
-    }
-
-    // Grade リレーションシップ
-    public function grades()
-    {
-        return $this->hasMany(Grade::class);
+        return $this->hasMany(SchoolGrade::class, 'student_id');
     }
 }

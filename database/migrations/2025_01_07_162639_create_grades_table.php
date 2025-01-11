@@ -13,15 +13,13 @@ class CreateGradesTable extends Migration
      */
     public function up()
     {
-        Schema::create('grades', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedBigInteger('student_id');
-            $table->string('subject');
-            $table->integer('score');
-            $table->timestamps();
-            
-            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('grades')) {
+            Schema::create('grades', function (Blueprint $table) {
+                $table->increments('id'); // increments メソッドを使用
+                $table->string('name');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
