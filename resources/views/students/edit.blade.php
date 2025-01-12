@@ -34,7 +34,7 @@
         <div>
             <label for="grade">学年:</label>
             <select id="grade" name="grade" required>
-                @foreach($grades as $grade)
+                @foreach(['1年生', '2年生', '3年生', '4年生'] as $grade)
                     <option value="{{ $grade }}" @if(old('grade', $student->grade) == $grade) selected @endif>{{ $grade }}</option>
                 @endforeach
             </select>

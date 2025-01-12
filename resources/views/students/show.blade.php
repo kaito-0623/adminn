@@ -4,21 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学生詳細表示画面</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         function filterGrades() {
-            var grade = document.getElementById('gradeFilter').value;
-            var term = document.getElementById('termFilter').value;
-            var rows = document.querySelectorAll('table.grade-table tr.grade-row');
-            rows.forEach(function(row) {
-                var rowGrade = row.dataset.grade;
-                var rowTerm = row.dataset.term;
-                if ((grade === '' || rowGrade === grade) && (term === '' || rowTerm === term)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+            var grade = $('#gradeFilter').val();
+            var term = $('#termFilter').val();
+            console.log("フィルタリングリクエスト:", grade, term); // デバッグ用コンソールログ
+            $.ajax({
+                url: "{{ route('students.filterStudentGrades', $student->id) }}",
+                method: 'GET',
+                data: { grade: grade, term: term },
+                success: function(data) {
+                    console.log("AJAXリクエスト成功:", data); // デバッグ用コンソールログ
+                    $('#gradesTable tbody').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("成績フィルタリングリクエスト失敗:", status, error); // エラーログ
                 }
             });
         }
+        
+        function sortGrades() {
+            var sortOrder = $('#sortOrder').val();
+            console.log("ソートリクエスト:", sortOrder); // デバッグ用コンソールログ
+            $.ajax({
+                url: "{{ route('students.sortStudentGrades', $student->id) }}",
+                method: 'GET',
+                data: { order: sortOrder },
+                success: function(data) {
+                    console.log("AJAXリクエスト成功:", data); // デバッグ用コンソールログ
+                    $('#gradesTable tbody').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("成績ソートリクエスト失敗:", status, error); // エラーログ
+                }
+            });
+        }
+        
+        $(document).ready(function() {
+            console.log("ドキュメント読み込み完了"); // デバッグ用コンソールログ
+        });
     </script>
 </head>
 <body>
@@ -82,44 +107,37 @@
                     <option value="{{ $term }}">{{ $term }}</option>
                 @endforeach
             </select>
+
+            <label for="sortOrder">学年のソート:</label>
+            <select id="sortOrder" onchange="sortGrades()">
+                <option value="asc">昇順</option>
+                <option value="desc">降順</option>
+            </select>
         </div>
 
         <!-- 成績表示 -->
         <div>
             <h2>成績一覧</h2>
-            <table border="1" class="grade-table">
-                <tr>
-                    <th>学期</th>
-                    <th>学年</th>
-                    <th>国語</th>
-                    <th>数学</th>
-                    <th>科学</th>
-                    <th>社会</th>
-                    <th>音楽</th>
-                    <th>家庭科</th>
-                    <th>英語</th>
-                    <th>美術</th>
-                    <th>体育</th>
-                    <th>編集</th>
-                </tr>
-                @foreach($student->schoolGrades as $schoolGrade)
-                <tr class="grade-row" data-grade="{{ $schoolGrade->grade }}" data-term="{{ $schoolGrade->term }}">
-                    <td>{{ $schoolGrade->term }}</td>
-                    <td>{{ $schoolGrade->grade }}</td>
-                    <td>{{ $schoolGrade->japanese }}</td>
-                    <td>{{ $schoolGrade->math }}</td>
-                    <td>{{ $schoolGrade->science }}</td>
-                    <td>{{ $schoolGrade->social_studies }}</td>
-                    <td>{{ $schoolGrade->music }}</td>
-                    <td>{{ $schoolGrade->home_economics }}</td>
-                    <td>{{ $schoolGrade->english }}</td>
-                    <td>{{ $schoolGrade->art }}</td>
-                    <td>{{ $schoolGrade->health_and_physical_education }}</td>
-                    <td>
-                        <button onclick="window.location.href='{{ route('schoolGrades.edit', $schoolGrade->id) }}'">編集</button>
-                    </td>
-                </tr>
-                @endforeach
+            <table border="1" id="gradesTable">
+                <thead>
+                    <tr>
+                        <th>学期</th>
+                        <th>学年</th>
+                        <th>国語</th>
+                        <th>数学</th>
+                        <th>科学</th>
+                        <th>社会</th>
+                        <th>音楽</th>
+                        <th>家庭科</th>
+                        <th>英語</th>
+                        <th>美術</th>
+                        <th>体育</th>
+                        <th>編集</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @include('students.partials.grades_table', ['grades' => $student->schoolGrades])
+                </tbody>
             </table>
         </div>
     @else

@@ -201,4 +201,67 @@ class NewStudentController extends Controller
 
         return view('students.show', compact('student', 'schoolGrades'));
     }
+
+    // 学生情報を検索するメソッド
+    public function search(Request $request)
+    {
+        $name = $request->input('name');
+        $grade = $request->input('grade');
+        $query = Student::query();
+
+        if (!empty($name)) {
+            $query->where('name', 'LIKE', "%$name%");
+        }
+
+        if (!empty($grade)) {
+            $query->where('grade', $grade);
+        }
+
+        $students = $query->get();
+
+        return view('students.partials.students_table', compact('students'));
+    }
+
+    // 学年でソートするメソッド
+    public function sort(Request $request)
+    {
+        $order = $request->input('order');
+        $students = Student::orderBy('grade', $order)->get();
+
+        return view('students.partials.students_table', compact('students'));
+    }
+
+    // 学生詳細画面で成績をフィルタリングするメソッド
+public function filterStudentGrades(Request $request, Student $student)
+{
+    $grade = $request->input('grade');
+    $term = $request->input('term');
+    
+    $query = $student->schoolGrades();
+
+    if (!empty($grade)) {
+        $query->where('grade', $grade);
+    }
+
+    if (!empty($term)) {
+        $query->where('term', $term);
+    }
+
+    $grades = $query->get();
+
+    return view('students.partials.grades_table', compact('grades'));
+}
+
+// 学年でソートするメソッド
+public function sortStudentGrades(Request $request, Student $student)
+{
+    $order = $request->input('order');
+    $grades = $student->schoolGrades()->orderBy('grade', $order)->get();
+
+    return view('students.partials.grades_table', compact('grades'));
+}
+
+
+
+
 }

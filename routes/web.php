@@ -15,6 +15,24 @@ Route::get('/', [WelcomeController::class, 'index']);
 
 Auth::routes();
 
+// 学生の検索ルートを追加
+Route::get('/students/search', [NewStudentController::class, 'search'])->name('students.search');
+
+// 学生のソートルートを追加
+Route::get('/students/sort', [NewStudentController::class, 'sort'])->name('students.sort');
+
+// 学生詳細画面の成績フィルタリングルートを追加
+Route::get('/students/{student}/filterGrades', [NewStudentController::class, 'filterGrades'])->name('students.filterGrades');
+
+// 学生詳細画面の成績フィルタリングルートを追加
+Route::get('/students/{student}/filterStudentGrades', [NewStudentController::class, 'filterStudentGrades'])->name('students.filterStudentGrades');
+
+// 学年でソートするルートを追加
+Route::get('/students/{student}/sortStudentGrades', [NewStudentController::class, 'sortStudentGrades'])->name('students.sortStudentGrades');
+
+// 学年更新ルートの追加
+Route::get('/schoolGrades/update-grades', [SchoolGradeController::class, 'updateGrades'])->name('schoolGrades.update-grades');
+
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
@@ -55,5 +73,3 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 // RegisterControllerのルートを追加
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [RegisterController::class, 'register']);
-
-

@@ -115,11 +115,31 @@ class SchoolGradeController extends Controller
         return redirect()->route('students.show', $schoolGrade->student_id)->with('success', '成績が更新されました');
     }
 
-    // 学年を更新するメソッド（必要に応じて実装）
+    // 学年を更新するメソッド
     public function updateGrades()
     {
         Log::info('Update Grades method called.');
-        // 学年を更新する処理をここに追加します。
+        
+        // 例として、すべての学生の学年を1年進める処理を実装
+        $students = Student::all();
+        foreach ($students as $student) {
+            switch ($student->grade) {
+                case '1年生':
+                    $student->grade = '2年生';
+                    break;
+                case '2年生':
+                    $student->grade = '3年生';
+                    break;
+                case '3年生':
+                    $student->grade = '4年生';
+                    break;
+                case '4年生':
+                    $student->grade = '卒業生'; // 例: 4年生の次は卒業生とする
+                    break;
+            }
+            $student->save();
+        }
+
         return redirect()->route('menu.index')->with('success', '学年が更新されました。');
     }
 }
