@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学生編集画面</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ asset('js/students_edit.js') }}"></script>
 </head>
 <body>
     <h1>学生編集画面</h1>
@@ -60,11 +62,5 @@
 
     <!-- 学生詳細表示画面に戻るボタン -->
     <button onclick="window.location.href='{{ route('students.show', $student->id) }}'">戻る</button>
-
-    <script>
-    function goBack() {
-        window.history.back();
-    }
-    </script>
 </body>
 </html>

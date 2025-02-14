@@ -1,4 +1,5 @@
 <?php
+
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
@@ -72,6 +73,19 @@ class Student extends Model
         } else {
             $this->save();
         }
+    }
+
+    // 学年に対応する ID を取得するメソッド
+    public static function getGradeId($grade)
+    {
+        $gradeMapping = [
+            '1年生' => 1,
+            '2年生' => 2,
+            '3年生' => 3,
+            '4年生' => 4,
+        ];
+
+        return $gradeMapping[$grade] ?? null;
     }
 
     // SchoolGrade リレーションシップ

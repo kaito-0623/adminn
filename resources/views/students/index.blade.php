@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学生表示画面</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // ルートURLをJavaScriptで利用するための変数を設定
+        var searchUrl = "{{ route('students.search') }}";
+        var sortUrl = "{{ route('students.sort') }}";
+    </script>
+    <script src="{{ asset('js/students_index.js') }}"></script>
 </head>
 <body>
     <h1>学生表示画面</h1>
@@ -50,46 +56,5 @@
 
     <!-- メニュー画面に戻るボタン -->
     <button onclick="window.location.href='{{ url('/menu') }}'">戻る</button>
-
-    <script>
-        $(document).ready(function() {
-            // 検索ボタンをクリックしたときの処理
-            $('#searchButton').on('click', function() {
-                var name = $('#name').val();
-                var grade = $('#grade').val();
-                console.log("検索ボタンが押されました:", name, grade); // デバッグ用コンソールログ
-                $.ajax({
-                    url: "{{ route('students.search') }}",
-                    method: 'GET',
-                    data: { name: name, grade: grade },
-                    success: function(data) {
-                        console.log("AJAXリクエスト成功:", data); // デバッグ用コンソールログ
-                        $('#studentsTable tbody').html(data);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAXリクエスト失敗:", status, error); // エラーログ
-                    }
-                });
-            });
-
-            // ソートオプションを変更したときの処理
-            $('#sortOrder').on('change', function() {
-                var sortOrder = $(this).val();
-                console.log("ソートオプションが変更されました:", sortOrder); // デバッグ用コンソールログ
-                $.ajax({
-                    url: "{{ route('students.sort') }}",
-                    method: 'GET',
-                    data: { order: sortOrder },
-                    success: function(data) {
-                        console.log("ソートリクエスト成功:", data); // デバッグ用コンソールログ
-                        $('#studentsTable tbody').html(data);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("ソートリクエスト失敗:", status, error); // エラーログ
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>

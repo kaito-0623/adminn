@@ -6,45 +6,11 @@
     <title>学生詳細表示画面</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        function filterGrades() {
-            var grade = $('#gradeFilter').val();
-            var term = $('#termFilter').val();
-            console.log("フィルタリングリクエスト:", grade, term); // デバッグ用コンソールログ
-            $.ajax({
-                url: "{{ route('students.filterStudentGrades', $student->id) }}",
-                method: 'GET',
-                data: { grade: grade, term: term },
-                success: function(data) {
-                    console.log("AJAXリクエスト成功:", data); // デバッグ用コンソールログ
-                    $('#gradesTable tbody').html(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error("成績フィルタリングリクエスト失敗:", status, error); // エラーログ
-                }
-            });
-        }
-        
-        function sortGrades() {
-            var sortOrder = $('#sortOrder').val();
-            console.log("ソートリクエスト:", sortOrder); // デバッグ用コンソールログ
-            $.ajax({
-                url: "{{ route('students.sortStudentGrades', $student->id) }}",
-                method: 'GET',
-                data: { order: sortOrder },
-                success: function(data) {
-                    console.log("AJAXリクエスト成功:", data); // デバッグ用コンソールログ
-                    $('#gradesTable tbody').html(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error("成績ソートリクエスト失敗:", status, error); // エラーログ
-                }
-            });
-        }
-        
-        $(document).ready(function() {
-            console.log("ドキュメント読み込み完了"); // デバッグ用コンソールログ
-        });
+        // ルートURLをJavaScriptで利用するための変数を設定
+        var filterStudentGradesUrl = "{{ route('students.filterStudentGrades', $student->id) }}";
+        var sortStudentGradesUrl = "{{ route('students.sortStudentGrades', $student->id) }}";
     </script>
+    <script src="{{ asset('js/students.js') }}"></script>
 </head>
 <body>
     <h1>学生詳細表示画面</h1>
@@ -146,11 +112,5 @@
 
     <!-- 学生表示画面に戻るボタン -->
     <button onclick="window.location.href='{{ route('students.index') }}'">学生表示画面に戻る</button>
-
-    <script>
-    function goBack() {
-        window.history.back();
-    }
-    </script>
 </body>
 </html>
