@@ -7,76 +7,68 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\SchoolGradeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\NewStudentController;
-use App\Http\Controllers\WelcomeController;
-use App\Http\Controllers\GradesController; // GradesController を追加
 use Illuminate\Support\Facades\Auth;
 
-Route::get('/', [WelcomeController::class, 'index']);
+// トップページ
+Route::get('/', function () {
+    return view('welcome');
+});
 
+// 認証ルート
 Auth::routes();
 
-// 学生の検索ルートを追加
-Route::get('/students/search', [NewStudentController::class, 'search'])->name('students.search');
+// ゲスト用ルート
+Route::middleware('guest')->group(function () {
+    Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('password/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('password/reset', [ForgotPasswordController::class, 'reset'])->name('password.update');
 
-// 学生のソートルートを追加
+    Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('register', [RegisterController::class, 'register']);
+
+    Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [LoginController::class, 'login']);
+});
+
+// ログアウトルート
+Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+
+// 学生関連ルート
+Route::get('/students/search', [NewStudentController::class, 'search'])->name('students.search');
 Route::get('/students/sort', [NewStudentController::class, 'sort'])->name('students.sort');
 
-// 学生詳細画面の成績フィルタリングルートを追加
+// 学生個別成績のフィルターとソート
 Route::get('/students/{student}/filterStudentGrades', [NewStudentController::class, 'filterStudentGrades'])->name('students.filterStudentGrades');
-
-// 学年でソートするルートを追加
 Route::get('/students/{student}/sortStudentGrades', [NewStudentController::class, 'sortStudentGrades'])->name('students.sortStudentGrades');
 
-// 学年更新ルートの追加
-Route::get('/schoolGrades/update-grades', [SchoolGradeController::class, 'updateStudentGrades'])->name('schoolGrades.update-student-grades'); // 追加
+// 成績検索機能ルート（SchoolGradeControllerからの検索に対応）
+Route::get('/students/{student}/grades/search', [SchoolGradeController::class, 'search'])->name('students.filterGrades'); // 修正済み
 
-Route::group(['middleware' => 'auth'], function () {
+// 学年更新ルート
+Route::post('/students/update-grades', [StudentController::class, 'updateStudentGrades'])->name('students.update-grades');
+
+// 認証が必要なルート
+Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
 
-    // 学生リソースルートを追加
-    Route::get('/students', [NewStudentController::class, 'index'])->name('students.index');
-    Route::get('/students/create', [NewStudentController::class, 'createForm'])->name('students.create');
-    Route::post('/students', [NewStudentController::class, 'store'])->name('students.store');
-    Route::get('/students/{student}', [NewStudentController::class, 'show'])->name('students.show');
-    Route::get('/students/{student}/edit', [NewStudentController::class, 'editForm'])->name('students.edit');
-    Route::put('/students/{student}', [NewStudentController::class, 'update'])->name('students.update');
-    Route::delete('/students/{student}', [NewStudentController::class, 'destroy'])->name('students.destroy');
+    // 学生登録関連ルート
+    Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
+    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+    Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
+    Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+    Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show'); // 学生詳細画面へのルート
+    Route::resource('students', StudentController::class)->except(['create']); // createは個別定義
 
-    // 成績リソースルートを追加
-    Route::get('/schoolGrades', [SchoolGradeController::class, 'index'])->name('schoolGrades.index');
-    Route::get('/schoolGrades/create', [SchoolGradeController::class, 'createForm'])->name('schoolGrades.create');
-    Route::post('/schoolGrades', [SchoolGradeController::class, 'store'])->name('schoolGrades.store');
-    Route::get('/schoolGrades/{schoolGrade}', [SchoolGradeController::class, 'show'])->name('schoolGrades.show');
-    Route::get('/schoolGrades/{schoolGrade}/edit', [SchoolGradeController::class, 'editStudentGradeForm'])->name('schoolGrades.edit'); // 修正
-    Route::put('/schoolGrades/{schoolGrade}', [SchoolGradeController::class, 'update'])->name('schoolGrades.update');
-    Route::delete('/schoolGrades/{schoolGrade}', [SchoolGradeController::class, 'destroy'])->name('schoolGrades.destroy');
-
-    // Grades リソースルートを追加
-    Route::get('/grades', [GradesController::class, 'index'])->name('grades.index');
-    Route::get('/grades/create', [GradesController::class, 'createForm'])->name('grades.create');
-    Route::post('/grades', [GradesController::class, 'store'])->name('grades.store');
-    Route::get('/grades/{grade}', [GradesController::class, 'show'])->name('grades.show');
-    Route::get('/grades/{grade}/edit', [GradesController::class, 'editForm'])->name('grades.edit');
-    Route::put('/grades/{grade}', [GradesController::class, 'update'])->name('grades.update');
-    Route::delete('/grades/{grade}', [GradesController::class, 'destroy'])->name('grades.destroy');
-    
-    // 学年更新ルートの追加
-    Route::get('/grades/update-grades', [GradesController::class, 'updateStudentGrades'])->name('grades.update-student-grades');
+    // 成績管理ルート（個別定義）
+    Route::get('/schoolGrades', [SchoolGradeController::class, 'index'])->name('schoolGrades.index'); // 成績一覧
+    Route::get('/schoolGrades/create', [SchoolGradeController::class, 'create'])->name('schoolGrades.create'); // 成績作成フォーム
+    Route::post('/schoolGrades', [SchoolGradeController::class, 'store'])->name('schoolGrades.store'); // 成績保存
+    Route::get('/schoolGrades/{id}', [SchoolGradeController::class, 'show'])->name('schoolGrades.show'); // 特定の成績表示
+    Route::get('/schoolGrades/{id}/edit', [SchoolGradeController::class, 'edit'])->name('schoolGrades.edit'); // 成績編集フォーム
+    Route::put('/schoolGrades/{id}', [SchoolGradeController::class, 'update'])->name('schoolGrades.update'); // 成績更新
+    Route::delete('/schoolGrades/{id}', [SchoolGradeController::class, 'destroy'])->name('schoolGrades.destroy'); // 成績削除
 });
-
-// Password reset routes
-Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-Route::get('password/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-Route::post('password/reset', [ForgotPasswordController::class, 'reset']);
-
-// LoginControllerのルートを追加
-Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('login', [LoginController::class, 'login']);
-Route::post('logout', [LoginController::class, 'logout'])->name('logout');
-
-// RegisterControllerのルートを追加
-Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('register', [RegisterController::class, 'register']);

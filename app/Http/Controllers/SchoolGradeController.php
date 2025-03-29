@@ -2,77 +2,201 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SchoolGradeRequest;
-use App\SchoolGrade;
-use App\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\SchoolGrade; // モデル
+use App\Student; // 学生モデル
 
 class SchoolGradeController extends Controller
 {
-    // 成績登録画面を表示するメソッド
-    public function createForm(Request $request)
+    /**
+     * 成績一覧を表示するメソッド
+     */
+    public function index(Request $request)
     {
-        Log::info('Create method called.');
-        $student = Student::findOrFail($request->student_id);
+        $studentId = $request->query('student_id'); // 学生IDでフィルタリング
+        if (!$studentId) {
+            Log::warning('Student ID not provided for grades index.');
+            return redirect()->route('students.index')->with('error', '学生IDが指定されていません。');
+        }
+
+        $schoolGrades = SchoolGrade::where('student_id', $studentId)->paginate(10); // ページネーション
+        Log::info('Grades retrieved for rendering:', [
+            'student_id' => $studentId,
+            'grades_count' => $schoolGrades->count()
+        ]);
+
+        return view('schoolGrades.index', compact('schoolGrades', 'studentId'));
+    }
+
+    /**
+     * 成績作成フォームを表示するメソッド
+     */
+    public function create(Request $request)
+    {
+        $studentId = $request->query('student_id');
+        if (!$studentId || !Student::find($studentId)) {
+            Log::warning('Student ID is missing or invalid.');
+            return redirect()->route('students.index')->with('error', '学生が見つかりません。');
+        }
+
+        $student = Student::findOrFail($studentId);
+        Log::info('Create form accessed for student.', ['student_id' => $studentId]);
         return view('schoolGrades.create', compact('student'));
     }
 
-    // 成績情報を保存するメソッド
-    public function store(SchoolGradeRequest $request)
+    /**
+     * 成績を保存するメソッド
+     */
+    public function store(Request $request)
     {
-        Log::info('Store method called.');
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'grade' => 'required',
+            'term' => 'required',
+            'japanese' => 'required|numeric|min:0|max:100',
+            'math' => 'required|numeric|min:0|max:100',
+            'science' => 'required|numeric|min:0|max:100',
+            'social_studies' => 'required|numeric|min:0|max:100',
+            'music' => 'required|numeric|min:0|max:100',
+            'home_economics' => 'required|numeric|min:0|max:100',
+            'english' => 'required|numeric|min:0|max:100',
+            'art' => 'required|numeric|min:0|max:100',
+            'health_and_physical_education' => 'required|numeric|min:0|max:100',
+        ]);
 
         try {
-            $schoolGrade = new SchoolGrade();
-            $schoolGrade->fill($request->validated());
-            $schoolGrade->save();
-
-            Log::info('School grade data saved:', $schoolGrade->toArray());
-            return redirect()->route('students.show', $request->student_id)->with('success', '成績が登録されました');
+            SchoolGrade::create($request->all());
+            Log::info('Grades successfully created.', ['student_id' => $request->student_id]);
+            return redirect()->route('students.show', $request->student_id)->with('success', '成績が登録されました。');
         } catch (\Exception $e) {
-            Log::error('An error occurred in the store method: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
+            Log::error('Error storing grades.', ['message' => $e->getMessage()]);
             return redirect()->back()->with('error', '成績の登録に失敗しました。');
         }
     }
 
-    // 成績編集画面を表示するメソッド
-    public function editStudentGradeForm(SchoolGrade $schoolGrade)
+    /**
+     * 学生詳細画面で成績一覧を渡すメソッド
+     */
+    public function show($id)
     {
-        Log::info('Edit method called.');
-        $students = Student::all(); // すべての学生データを取得
-        return view('schoolGrades.edit', compact('schoolGrade', 'students'));
+        try {
+            $student = Student::findOrFail($id);
+            $grades = SchoolGrade::where('student_id', $id)->get();
+
+            Log::info('Student and grades details retrieved.', ['student_id' => $id, 'grades_count' => $grades->count()]);
+
+            return view('students.show', compact('student', 'grades'));
+        } catch (\Exception $e) {
+            Log::error('Error retrieving grades.', ['message' => $e->getMessage()]);
+            return redirect()->route('students.index')->with('error', '学生詳細画面の取得に失敗しました。');
+        }
     }
 
-    // 成績情報を更新するメソッド
-    public function update(SchoolGradeRequest $request, SchoolGrade $schoolGrade)
+    /**
+     * 成績検索メソッド
+     */
+    public function search(Request $request, $studentId)
     {
-        Log::info('Update method called.');
+        try {
+            $gradeMap = [
+                '1年生' => 1,
+                '2年生' => 2,
+                '3年生' => 3,
+                '4年生' => 4,
+            ];
+
+            $termMap = [
+                '1学期' => '1学期',
+                '2学期' => '2学期',
+                '3学期' => '3学期',
+            ];
+
+            $grade = $gradeMap[$request->input('grade')] ?? null;
+            $term = $termMap[$request->input('term')] ?? null;
+
+            $grades = SchoolGrade::query()
+                ->where('student_id', $studentId)
+                ->when($grade, function ($query, $grade) {
+                    return $query->where('grade', $grade);
+                })
+                ->when($term, function ($query, $term) {
+                    return $query->where('term', $term);
+                })
+                ->orderByGrade($request->input('order', 'asc'))
+                ->get();
+
+            Log::info('Search executed successfully.', [
+                'student_id' => $studentId,
+                'grades_count' => $grades->count(),
+            ]);
+
+            $student = Student::findOrFail($studentId);
+            return view('students.show', compact('grades', 'student'));
+        } catch (\Exception $e) {
+            Log::error('Error occurred during search.', ['message' => $e->getMessage()]);
+            return redirect()->back()->with('error', '成績検索中にエラーが発生しました。');
+        }
+    }
+
+    /**
+     * 成績編集フォームを表示するメソッド
+     */
+    public function edit($id)
+    {
+        try {
+            $schoolGrade = SchoolGrade::findOrFail($id);
+            Log::info('Edit form accessed for grade.', ['grade_id' => $id]);
+            return view('schoolGrades.edit', compact('schoolGrade'));
+        } catch (\Exception $e) {
+            Log::error('Error accessing edit form.', ['message' => $e->getMessage()]);
+            return redirect()->route('schoolGrades.index')->with('error', '成績の編集画面にアクセスできませんでした。');
+        }
+    }
+
+    /**
+     * 成績を更新するメソッド
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'grade' => 'required',
+            'term' => 'required',
+            'japanese' => 'required|numeric|min:0|max:100',
+            'math' => 'required|numeric|min:0|max:100',
+            'science' => 'required|numeric|min:0|max:100',
+            'social_studies' => 'required|numeric|min:0|max:100',
+            'music' => 'required|numeric|min:0|max:100',
+            'home_economics' => 'required|numeric|min:0|max:100',
+            'english' => 'required|numeric|min:0|max:100',
+            'art' => 'required|numeric|min:0|max:100',
+            'health_and_physical_education' => 'required|numeric|min:0|max:100',
+        ]);
 
         try {
-            $schoolGrade->update($request->validated());
-            Log::info('School grade data updated:', $schoolGrade->toArray());
-            return redirect()->route('students.show', $schoolGrade->student_id)->with('success', '成績が更新されました');
+            $schoolGrade = SchoolGrade::findOrFail($id);
+            $schoolGrade->update($request->all());
+            Log::info('Grade successfully updated.', ['grade_id' => $schoolGrade->id]);
+            return redirect()->route('students.show', $schoolGrade->student_id)->with('success', '成績が更新されました。');
         } catch (\Exception $e) {
-            Log::error('An error occurred in the update method: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
+            Log::error('Error updating grade.', ['message' => $e->getMessage()]);
             return redirect()->back()->with('error', '成績の更新に失敗しました。');
         }
     }
 
-    // 学年を更新するメソッド
-    public function updateStudentGrades()
+    /**
+     * 成績を削除するメソッド
+     */
+    public function destroy($id)
     {
-        Log::info('Update Grades method called.');
-
         try {
-            SchoolGrade::updateStudentGrades();
-            return redirect()->route('menu.index')->with('success', '学年が更新されました。');
+            $schoolGrade = SchoolGrade::findOrFail($id);
+            $schoolGrade->delete();
+            Log::info('Grade successfully deleted.', ['grade_id' => $id]);
+            return redirect()->route('students.show', $schoolGrade->student_id)->with('success', '成績が削除されました。');
         } catch (\Exception $e) {
-            Log::error('An error occurred in the updateGrades method: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', '学年の更新に失敗しました。');
+            Log::error('Error deleting grade.', ['message' => $e->getMessage()]);
+            return redirect()->back()->with('error', '成績の削除に失敗しました。');
         }
     }
 }

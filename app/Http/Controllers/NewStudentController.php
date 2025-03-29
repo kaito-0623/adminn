@@ -2,148 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StudentRequest;
-use App\Student;
 use App\SchoolGrade;
-use Illuminate\Support\Facades\Log;
+use App\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NewStudentController extends Controller
 {
-    public function index(Request $request)
-    {
-        Log::info('Index method called.');
-        $students = Student::with('schoolGrades')
-            ->filterByName($request->input('name'))
-            ->filterByGrade($request->input('grade'))
-            ->get();
-
-        $grades = Student::distinct()->pluck('grade');
-
-        Log::info('Returning view with students and grades.');
-        return view('students.index', [
-            'students' => $students,
-            'grades' => $grades,
-        ]);
-    }
-
-    public function createForm()
-    {
-        Log::info('Create method called.');
-        $grades = SchoolGrade::distinct()->pluck('grade');
-        return view('students.create', compact('grades'));
-    }
-
-    public function store(StudentRequest $request)
-    {
-        Log::info('Store method called.');
-
-        try {
-            $student = new Student();
-            $student->saveStudent($request->validated(), $request->file('photo'));
-
-            Log::info('Student data saved:', $student->toArray());
-            return redirect()->route('students.index')->with('success', '学生情報が登録されました');
-        } catch (\Exception $e) {
-            Log::error('An error occurred in the store method: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', '学生情報の登録に失敗しました。');
-        }
-    }
-
-    public function editForm(Student $student)
-    {
-        Log::info('Edit method called.');
-        $grades = SchoolGrade::distinct()->pluck('grade');
-        return view('students.edit', compact('student', 'grades'));
-    }
-
-    public function update(StudentRequest $request, Student $student)
-    {
-        Log::info('Update method called.');
-
-        try {
-            $student->saveStudent($request->validated(), $request->file('photo'));
-
-            Log::info('Student data updated:', $student->toArray());
-            return redirect()->route('students.index')->with('success', '学生情報が更新されました');
-        } catch (\Exception $e) {
-            Log::error('An error occurred in the update method: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', '学生情報の更新に失敗しました。');
-        }
-    }
-
-    public function destroy(Student $student)
-    {
-        Log::info('Destroy method called.');
-        $student->deletePhoto();
-        $student->delete();
-
-        Log::info('Student data deleted.');
-        return redirect()->route('students.index')->with('success', '学生情報が削除されました');
-    }
-
-    public function show(Student $student)
-    {
-        Log::info('Show method called.');
-        $schoolGrades = $student->schoolGrades;
-
-        return view('students.show', compact('student', 'schoolGrades'));
-    }
-
-    public function search(Request $request)
-    {
-        $name = $request->input('name');
-        $grade = $request->input('grade');
-        $query = Student::query();
-
-        if (!empty($name)) {
-            $query->where('name', 'LIKE', "%$name%");
-        }
-
-        if (!empty($grade)) {
-            $query->where('grade', $grade);
-        }
-
-        $students = $query->get();
-
-        return view('students.partials.students_table', compact('students'));
-    }
-
-    public function sort(Request $request)
-    {
-        $order = $request->input('order');
-        $students = Student::orderBy('grade', $order)->get();
-
-        return view('students.partials.students_table', compact('students'));
-    }
-
+    /**
+     * 成績をフィルタリングするメソッド。
+     */
     public function filterStudentGrades(Request $request, Student $student)
     {
-        $grade = $request->input('grade');
-        $term = $request->input('term');
+        Log::info('Filter student grades accessed.', [
+            'student_id' => $student->id,
+            'grade_filter' => $request->input('grade'),
+            'term_filter' => $request->input('term')
+        ]);
 
-        $query = $student->schoolGrades();
+        // モデルのメソッドを使って成績を取得
+        try {
+            $grades = SchoolGrade::getFilteredAndSortedGrades(
+                $student->id,
+                $request->input('grade'), // 学年フィルタ
+                $request->input('term')  // 学期フィルタ
+            );
 
-        if (!empty($grade)) {
-            $query->where('grade', $grade);
+            // 成績が取得されたか確認するログ
+            Log::info('Grades retrieved successfully.', ['grades_count' => $grades->count()]);
+
+            return view('students.partials.grades_table', compact('grades'));
+        } catch (\Exception $e) {
+            // エラーハンドリングとログ出力
+            Log::error('Error while filtering student grades.', [
+                'student_id' => $student->id,
+                'error_message' => $e->getMessage()
+            ]);
+
+            return response()->json(['error' => '成績の取得中にエラーが発生しました。'], 500);
         }
-
-        if (!empty($term)) {
-            $query->where('term', $term);
-        }
-
-        $grades = $query->get();
-
-        return view('students.partials.grades_table', compact('grades'));
     }
 
+    /**
+     * 成績を並べ替えるメソッド。
+     */
     public function sortStudentGrades(Request $request, Student $student)
     {
-        $order = $request->input('order');
-        $grades = $student->schoolGrades()->orderBy('grade', $order)->get();
+        Log::info('Sort student grades accessed.', [
+            'student_id' => $student->id,
+            'sort_order' => $request->input('order', 'asc')
+        ]);
 
-        return view('students.partials.grades_table', compact('grades'));
+        // モデルのメソッドを使って成績を取得
+        try {
+            $grades = SchoolGrade::getFilteredAndSortedGrades(
+                $student->id,
+                null, // 学年フィルタなし
+                null, // 学期フィルタなし
+                $request->input('order', 'asc') // 並べ替え条件
+            );
+
+            // 成績が取得されたか確認するログ
+            Log::info('Grades sorted successfully.', ['grades_count' => $grades->count()]);
+
+            return view('students.partials.grades_table', compact('grades'));
+        } catch (\Exception $e) {
+            // エラーハンドリングとログ出力
+            Log::error('Error while sorting student grades.', [
+                'student_id' => $student->id,
+                'error_message' => $e->getMessage()
+            ]);
+
+            return response()->json(['error' => '成績のソート中にエラーが発生しました。'], 500);
+        }
     }
 }

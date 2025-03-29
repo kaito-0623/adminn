@@ -3,17 +3,18 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use App\SchoolGrade;
 
 class Student extends Model
 {
-    protected $fillable = [
-        'grade', 'name', 'email', 'address', 'img_path', 'comment'
-    ];
+    protected $fillable = ['name', 'address', 'email', 'grade', 'img_path', 'comment'];
 
-    // スコープ: 名前でフィルタリング
+    // 学生が持つ成績とのリレーションを定義
+    public function schoolGrades()
+    {
+        return $this->hasMany(SchoolGrade::class);
+    }
+
+    // 名前でフィルタリングするスコープ
     public function scopeFilterByName($query, $name)
     {
         if (!empty($name)) {
@@ -22,7 +23,7 @@ class Student extends Model
         return $query;
     }
 
-    // スコープ: 成績でフィルタリング
+    // 学年でフィルタリングするスコープ
     public function scopeFilterByGrade($query, $grade)
     {
         if (!empty($grade)) {
@@ -31,66 +32,27 @@ class Student extends Model
         return $query;
     }
 
-    // 画像の保存
-    public function savePhoto($file)
+    // 学生作成ロジック
+    public static function createStudent(array $data, $photo = null)
     {
-        try {
-            if ($this->img_path) {
-                Storage::disk('public')->delete($this->img_path);
-            }
-            $path = $file->store('photos', 'public');
-            $this->img_path = $path;
-            $this->save();
-        } catch (\Exception $e) {
-            Log::error('File Upload Error in savePhoto: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            throw $e;
+        // 学生情報作成
+        $data['img_path'] = $photo ? $photo->store('photos', 'public') : null;
+        return self::create($data);
+    }
+
+    // 学生情報を更新するメソッド
+    public function updateStudent(array $data, $photo = null)
+    {
+        if ($photo) {
+            $data['img_path'] = $photo->store('photos', 'public');
         }
+        return $this->update($data);
     }
 
-    // 画像の削除
-    public function deletePhoto()
+    // 学年を更新するロジック
+    public static function updateGrades()
     {
-        try {
-            if ($this->img_path) {
-                Storage::disk('public')->delete($this->img_path);
-                $this->img_path = null;
-                $this->save();
-            }
-        } catch (\Exception $e) {
-            Log::error('File Deletion Error in deletePhoto: ' . $e->getMessage());
-            Log::error('Trace: ' . $e->getTraceAsString());
-            throw $e;
-        }
-    }
-
-    // 学生情報の保存処理を含むメソッド
-    public function saveStudent(array $data, $file = null)
-    {
-        $this->fill($data);
-        if ($file) {
-            $this->savePhoto($file);
-        } else {
-            $this->save();
-        }
-    }
-
-    // 学年に対応する ID を取得するメソッド
-    public static function getGradeId($grade)
-    {
-        $gradeMapping = [
-            '1年生' => 1,
-            '2年生' => 2,
-            '3年生' => 3,
-            '4年生' => 4,
-        ];
-
-        return $gradeMapping[$grade] ?? null;
-    }
-
-    // SchoolGrade リレーションシップ
-    public function schoolGrades()
-    {
-        return $this->hasMany(SchoolGrade::class, 'student_id');
+        // クエリを直接実行して一括更新（N+1 問題を回避）
+        self::where('grade', '<', 4)->increment('grade', 1);
     }
 }
