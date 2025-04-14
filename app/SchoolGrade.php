@@ -96,22 +96,41 @@ class SchoolGrade extends Model
     // 成績作成メソッド
     public static function createGrade(array $data)
     {
-        return self::create($data);
+        try {
+            $grade = self::create($data);
+            Log::info('Grade created successfully.', ['id' => $grade->id, 'data' => $data]);
+            return $grade;
+        } catch (\Exception $e) {
+            Log::error('Error creating grade.', ['data' => $data, 'error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to create grade: ' . $e->getMessage());
+        }
     }
 
     // 成績更新メソッド
     public static function updateGrade($id, array $data)
     {
-        $grade = self::findOrFail($id);
-        $grade->update($data);
-        return $grade;
+        try {
+            $grade = self::findOrFail($id);
+            $grade->update($data);
+            Log::info('Grade updated successfully.', ['id' => $id, 'data' => $data]);
+            return $grade;
+        } catch (\Exception $e) {
+            Log::error('Error updating grade.', ['id' => $id, 'error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to update grade: ' . $e->getMessage());
+        }
     }
 
     // 成績削除メソッド
     public static function deleteGrade($id)
     {
-        $grade = self::findOrFail($id);
-        $grade->delete();
-        return true;
+        try {
+            $grade = self::findOrFail($id);
+            $grade->delete();
+            Log::info('Grade deleted successfully.', ['id' => $id]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error deleting grade.', ['id' => $id, 'error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to delete grade: ' . $e->getMessage());
+        }
     }
 }

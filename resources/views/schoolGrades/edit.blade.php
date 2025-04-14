@@ -4,102 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>成績編集画面</title>
+    <link rel="stylesheet" href="{{ asset('css/schoolGrades_edit.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/school_grades_edit.js') }}"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin: 20px 0;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert {
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        form div {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 5px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
-        input[readonly] {
-            background-color: #e9ecef;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .delete-button {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .delete-button:hover {
-            background-color: #c82333;
-        }
-
-        .back-button {
-            background-color: #6c757d;
-        }
-
-        .back-button:hover {
-            background-color: #5a6268;
-        }
-    </style>
 </head>
 <body>
     <h1>成績編集画面</h1>
@@ -118,7 +25,7 @@
         <!-- 成績編集フォーム -->
         <form method="POST" action="{{ route('schoolGrades.update', $schoolGrade->id) }}">
             @csrf
-            @method('PUT')
+            
             
             <div>
                 <label for="student_id">学生:</label>
@@ -189,7 +96,6 @@
         <!-- 成績削除ボタン -->
         <form method="POST" action="{{ route('schoolGrades.destroy', $schoolGrade->id) }}" onsubmit="return confirm('本当にこの成績を削除しますか？');">
             @csrf
-            @method('DELETE')
             <button type="submit" class="delete-button">成績削除</button>
         </form>
 

@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Student extends Model
 {
@@ -35,24 +36,42 @@ class Student extends Model
     // 学生作成ロジック
     public static function createStudent(array $data, $photo = null)
     {
-        // 学生情報作成
-        $data['img_path'] = $photo ? $photo->store('photos', 'public') : null;
-        return self::create($data);
+        try {
+            $data['img_path'] = $photo ? $photo->store('photos', 'public') : null;
+            $student = self::create($data);
+            Log::info('Student created successfully.', ['id' => $student->id, 'data' => $data]);
+            return $student;
+        } catch (\Exception $e) {
+            Log::error('Error creating student.', ['data' => $data, 'error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to create student: ' . $e->getMessage());
+        }
     }
 
     // 学生情報を更新するメソッド
     public function updateStudent(array $data, $photo = null)
     {
-        if ($photo) {
-            $data['img_path'] = $photo->store('photos', 'public');
+        try {
+            if ($photo) {
+                $data['img_path'] = $photo->store('photos', 'public');
+            }
+            $this->update($data);
+            Log::info('Student updated successfully.', ['id' => $this->id, 'data' => $data]);
+            return $this;
+        } catch (\Exception $e) {
+            Log::error('Error updating student.', ['id' => $this->id, 'error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to update student: ' . $e->getMessage());
         }
-        return $this->update($data);
     }
 
     // 学年を更新するロジック
     public static function updateGrades()
     {
-        // クエリを直接実行して一括更新（N+1 問題を回避）
-        self::where('grade', '<', 4)->increment('grade', 1);
+        try {
+            self::where('grade', '<', 4)->increment('grade', 1); // 一括更新処理
+            Log::info('Grades updated successfully for all students.');
+        } catch (\Exception $e) {
+            Log::error('Error updating grades.', ['error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to update grades: ' . $e->getMessage());
+        }
     }
 }

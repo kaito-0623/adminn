@@ -59,9 +59,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
     Route::post('/students', [StudentController::class, 'store'])->name('students.store');
     Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
-    Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+    Route::post('/students/{student}/update', [StudentController::class, 'update'])->name('students.update'); // Route::putから変更
     Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show'); // 学生詳細画面へのルート
-    Route::resource('students', StudentController::class)->except(['create']); // createは個別定義
+    Route::post('/students/{student}/delete', [StudentController::class, 'destroy'])->name('students.destroy'); // Route::deleteから変更
+    Route::get('/students', [StudentController::class, 'index'])->name('students.index'); // **追加**
 
     // 成績管理ルート（個別定義）
     Route::get('/schoolGrades', [SchoolGradeController::class, 'index'])->name('schoolGrades.index'); // 成績一覧
@@ -69,6 +70,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/schoolGrades', [SchoolGradeController::class, 'store'])->name('schoolGrades.store'); // 成績保存
     Route::get('/schoolGrades/{id}', [SchoolGradeController::class, 'show'])->name('schoolGrades.show'); // 特定の成績表示
     Route::get('/schoolGrades/{id}/edit', [SchoolGradeController::class, 'edit'])->name('schoolGrades.edit'); // 成績編集フォーム
-    Route::put('/schoolGrades/{id}', [SchoolGradeController::class, 'update'])->name('schoolGrades.update'); // 成績更新
-    Route::delete('/schoolGrades/{id}', [SchoolGradeController::class, 'destroy'])->name('schoolGrades.destroy'); // 成績削除
+    Route::post('/schoolGrades/{id}/update', [SchoolGradeController::class, 'update'])->name('schoolGrades.update'); // Route::putから変更
+    Route::post('/schoolGrades/{id}/delete', [SchoolGradeController::class, 'destroy'])->name('schoolGrades.destroy'); // Route::deleteから変更
 });

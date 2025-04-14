@@ -36,13 +36,8 @@ class StudentController extends Controller
         try {
             Log::info('UpdateStudentGrades method started.');
 
-            // すべての学生の学年を1つ繰り上げ（最大4年生）
-            $students = Student::all();
-            foreach ($students as $student) {
-                $student->grade = min($student->grade + 1, 4); // 学年は最大4年生
-                $student->save();
-                Log::info('Student grade updated.', ['student_id' => $student->id, 'new_grade' => $student->grade]);
-            }
+            // モデルのビジネスロジックを呼び出し
+            Student::updateGrades();
 
             Log::info('UpdateStudentGrades method completed.');
             return redirect()->route('menu.index')->with('success', '学年が更新されました。');
@@ -76,24 +71,60 @@ class StudentController extends Controller
             // バリデーション済みデータを取得
             $validated = $request->validated();
 
-            $student = new Student();
-            $student->fill($validated);
+            // モデルのビジネスロジックを呼び出し
+            $photo = $request->hasFile('photo') ? $request->file('photo') : null;
+            $student = Student::createStudent($validated, $photo);
 
-            // 写真を保存
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store('photos', 'public');
-                $student->img_path = $photoPath;
-                Log::info('Photo uploaded successfully.', ['path' => $photoPath]);
-            }
-
-            $student->save();
             Log::info('Student saved successfully.', ['student_id' => $student->id]);
-
             return redirect()->route('students.index')->with('success', '学生が正常に登録されました！');
         } catch (\Exception $e) {
             Log::error('Error occurred while storing student.', ['error_message' => $e->getMessage()]);
             return redirect()->route('students.create')->with('error', '学生の登録中にエラーが発生しました。');
         }
+    }
+
+    // 学生情報を更新するメソッド
+    public function update(StudentRequest $request, $id)
+    {
+        Log::info('Update method accessed.', ['student_id' => $id]);
+
+        $student = Student::find($id);
+
+        if (!$student) {
+            Log::warning('Student not found for update.', ['student_id' => $id]);
+            return redirect()->route('students.index')->with('error', '指定された学生が見つかりません。');
+        }
+
+        try {
+            // バリデーション済みデータを取得
+            $validated = $request->validated();
+
+            // モデルのビジネスロジックを呼び出し
+            $photo = $request->hasFile('photo') ? $request->file('photo') : null;
+            $student->updateStudent($validated, $photo);
+
+            Log::info('Student updated successfully.', ['student_id' => $student->id]);
+            return redirect()->route('students.show', $student->id)->with('success', '学生情報が正常に更新されました。');
+        } catch (\Exception $e) {
+            Log::error('Error occurred while updating student.', ['error_message' => $e->getMessage()]);
+            return redirect()->back()->with('error', '学生情報の更新に失敗しました。');
+        }
+    }
+
+    // 学生編集画面を表示するメソッド
+    public function edit($id)
+    {
+        Log::info('Edit method accessed.', ['student_id' => $id]);
+
+        $student = Student::find($id);
+
+        if (!$student) {
+            Log::warning('Student not found for editing.', ['student_id' => $id]);
+            return redirect()->route('students.index')->with('error', '学生が見つかりませんでした。');
+        }
+
+        Log::info('Student data retrieved for editing.', ['student_id' => $student->id]);
+        return view('students.edit', compact('student'));
     }
 
     // 学生詳細を表示するメソッド
@@ -121,57 +152,6 @@ class StudentController extends Controller
         return view('students.show', compact('student', 'grades'));
     }
 
-    // 学生編集画面を表示するメソッド
-    public function edit($id)
-    {
-        Log::info('Edit method accessed.', ['student_id' => $id]);
-
-        $student = Student::find($id);
-
-        if (!$student) {
-            Log::warning('Student not found for editing.', ['student_id' => $id]);
-            return redirect()->route('students.index')->with('error', '学生が見つかりませんでした。');
-        }
-
-        Log::info('Student data retrieved for editing.', ['student_id' => $student->id]);
-        return view('students.edit', compact('student'));
-    }
-
-    // 学生情報を更新するメソッド
-    public function update(StudentRequest $request, $id)
-    {
-        Log::info('Update method accessed.', ['student_id' => $id]);
-
-        $student = Student::find($id);
-
-        if (!$student) {
-            Log::warning('Student not found for update.', ['student_id' => $id]);
-            return redirect()->route('students.index')->with('error', '指定された学生が見つかりません。');
-        }
-
-        try {
-            // バリデーション済みデータを取得
-            $validated = $request->validated();
-
-            $student->fill($validated);
-
-            // 写真を更新
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store('photos', 'public');
-                $student->img_path = $photoPath;
-                Log::info('Photo uploaded successfully.', ['path' => $photoPath]);
-            }
-
-            $student->save();
-            Log::info('Student updated successfully.', ['student_id' => $student->id]);
-
-            return redirect()->route('students.show', $student->id)->with('success', '学生情報が正常に更新されました。');
-        } catch (\Exception $e) {
-            Log::error('Error occurred while updating student.', ['error_message' => $e->getMessage()]);
-            return redirect()->back()->with('error', '学生情報の更新に失敗しました。');
-        }
-    }
-
     // 学生を削除するメソッド
     public function destroy($id)
     {
@@ -185,9 +165,10 @@ class StudentController extends Controller
                 return redirect()->route('students.index')->with('error', '学生が見つかりませんでした。');
             }
 
+            // モデルのビジネスロジックを呼び出し
             $student->delete();
-            Log::info('Student deleted successfully.', ['student_id' => $id]);
 
+            Log::info('Student deleted successfully.', ['student_id' => $id]);
             return redirect()->route('students.index')->with('success', '学生が削除されました。');
         } catch (\Exception $e) {
             Log::error('Error occurred while deleting student.', ['error_message' => $e->getMessage()]);

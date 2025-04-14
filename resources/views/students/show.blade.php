@@ -4,114 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学生詳細表示画面</title>
+    <link rel="stylesheet" href="{{ asset('css/students_show.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('js/students.js') }}"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin: 20px 0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .info, .actions, .grades {
-            margin-bottom: 20px;
-        }
-        .info div, .actions button, .grades select, .grades table {
-            margin-bottom: 10px;
-        }
-        label {
-            font-weight: bold;
-            color: #555;
-        }
-        span {
-            font-size: 16px;
-            color: #333;
-        }
-        img {
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px 15px;
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        table th {
-            background-color: #f4f4f4;
-        }
-        .back-button {
-            background-color: #6c757d;
-        }   
-        .back-button:hover {
-            background-color: #5a6268;
-        }
-        .alert {
-            color: #d8000c;
-            background-color: #ffbaba;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .debug-box {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 20px;
-            border-radius: 8px;
-        }
-        .debug-box h3 {
-            margin-top: 0;
-            color: #d8000c;
-        }
-
-        /* 編集ボタンのデザイン */
-        .btn-edit {
-            display: inline-block;
-            padding: 8px 12px;
-            background-color: #007BFF; /* 青色 */
-            color: #fff; /* 白文字 */
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            text-align: center;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-edit:hover {
-            background-color: #0056b3; /* 濃い青色 */
-        }
-    </style>
 </head>
 <body>
     <h1>学生詳細表示画面</h1>
@@ -150,9 +45,8 @@
             <button onclick="window.location.href='{{ route('students.edit', $student->id) }}'">学生編集</button>
             <button onclick="window.location.href='{{ route('schoolGrades.create', ['student_id' => $student->id]) }}'">成績追加</button>
             <form method="POST" action="{{ route('students.destroy', $student->id) }}" style="display:inline-block;" onsubmit="return confirm('本当にこの学生を削除しますか？');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="delete-button">削除</button>
+                 @csrf
+                    <button type="submit" class="delete-button">削除</button>
             </form>
         </div>
 

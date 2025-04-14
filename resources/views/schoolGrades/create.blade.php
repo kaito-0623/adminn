@@ -4,72 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>成績登録画面</title>
-    <style>
-        /* 現在のスタイルを維持 */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-top: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .alert {
-            color: #d8000c;
-            background-color: #ffbaba;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        form div {
-            margin-bottom: 15px;
-        }
-        label {
-            font-weight: bold;
-            color: #555;
-            display: block;
-            margin-bottom: 5px;
-        }
-        select, input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .back-button {
-            margin-top: 15px;
-            background-color: #6c757d;
-        }
-        .back-button:hover {
-            background-color: #5a6268;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/schoolGrades_create.css') }}">
 </head>
 <body>
     <h1>成績登録画面</h1>
