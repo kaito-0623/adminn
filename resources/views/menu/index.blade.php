@@ -28,8 +28,8 @@
                     <a href="{{ route('students.index') }}">学生表示</a>
                 </li>
                 <li>
-                    <!-- 学年更新フォーム -->
-                    <form action="{{ route('students.update-grades') }}" method="POST">
+                    <!-- 学年更新ボタンを一括更新の仕組みに変更 -->
+                    <form action="{{ route('students.update-all-grades') }}" method="POST">
                         @csrf
                         <button type="submit">学年更新</button>
                     </form>

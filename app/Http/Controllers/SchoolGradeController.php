@@ -9,8 +9,8 @@ use App\Student; // 学生モデル
 
 class SchoolGradeController extends Controller
 {
-    /**
-     * 成績一覧を表示するメソッド
+    /** 
+     * 成績一覧を表示するメソッド 
      */
     public function index(Request $request)
     {
@@ -29,8 +29,8 @@ class SchoolGradeController extends Controller
         return view('schoolGrades.index', compact('schoolGrades', 'studentId'));
     }
 
-    /**
-     * 成績作成フォームを表示するメソッド
+    /** 
+     * 成績作成フォームを表示するメソッド 
      */
     public function create(Request $request)
     {
@@ -45,8 +45,8 @@ class SchoolGradeController extends Controller
         return view('schoolGrades.create', compact('student'));
     }
 
-    /**
-     * 成績を保存するメソッド
+    /** 
+     * 成績を保存するメソッド 
      */
     public function store(Request $request)
     {
@@ -75,8 +75,8 @@ class SchoolGradeController extends Controller
         }
     }
 
-    /**
-     * 学生詳細画面で成績一覧を渡すメソッド
+    /** 
+     * 学生詳細画面で成績一覧を渡すメソッド 
      */
     public function show($id)
     {
@@ -93,8 +93,8 @@ class SchoolGradeController extends Controller
         }
     }
 
-    /**
-     * 成績検索メソッド
+    /** 
+     * 成績検索メソッド 
      */
     public function search(Request $request, $studentId)
     {
@@ -139,8 +139,8 @@ class SchoolGradeController extends Controller
         }
     }
 
-    /**
-     * 成績編集フォームを表示するメソッド
+    /** 
+     * 成績編集フォームを表示するメソッド 
      */
     public function edit($id)
     {
@@ -154,12 +154,12 @@ class SchoolGradeController extends Controller
         }
     }
 
-    /**
-     * 成績を更新するメソッド
+    /** 
+     * 成績を更新するメソッド（修正済み） 
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'grade' => 'required',
             'term' => 'required',
             'japanese' => 'required|numeric|min:0|max:100',
@@ -174,29 +174,36 @@ class SchoolGradeController extends Controller
         ]);
 
         try {
-            $schoolGrade = SchoolGrade::findOrFail($id);
-            $schoolGrade->update($request->all());
-            Log::info('Grade successfully updated.', ['grade_id' => $schoolGrade->id]);
-            return redirect()->route('students.show', $schoolGrade->student_id)->with('success', '成績が更新されました。');
+            // 安全なデータを使用して成績を更新
+            $updatedGrade = SchoolGrade::updateGrade($id, $validatedData);
+            Log::info('Grade successfully updated.', ['grade_id' => $id]);
+            return redirect()->route('students.show', $updatedGrade->student_id)->with('success', '成績が更新されました。');
         } catch (\Exception $e) {
             Log::error('Error updating grade.', ['message' => $e->getMessage()]);
             return redirect()->back()->with('error', '成績の更新に失敗しました。');
         }
     }
 
-    /**
-     * 成績を削除するメソッド
+    /** 
+     * 成績を削除するメソッド（修正済み） 
      */
     public function destroy($id)
     {
         try {
-            $schoolGrade = SchoolGrade::findOrFail($id);
-            $schoolGrade->delete();
-            Log::info('Grade successfully deleted.', ['grade_id' => $id]);
-            return redirect()->route('students.show', $schoolGrade->student_id)->with('success', '成績が削除されました。');
+            Log::info('Destroy method accessed for grade.', ['grade_id' => $id]);
+
+            // 成績データを取得し、削除
+            $grade = SchoolGrade::findOrFail($id);
+            $studentId = $grade->student_id; // 学生IDを取得
+            $grade->delete();
+
+            Log::info('Grade deleted successfully.', ['grade_id' => $id]);
+
+            // 削除後、学生詳細画面にリダイレクト
+            return redirect()->route('students.show', $studentId)->with('success', '成績が削除されました。');
         } catch (\Exception $e) {
-            Log::error('Error deleting grade.', ['message' => $e->getMessage()]);
-            return redirect()->back()->with('error', '成績の削除に失敗しました。');
+            Log::error('Error occurred while deleting grade.', ['error_message' => $e->getMessage()]);
+            return redirect()->route('students.index')->with('error', '成績の削除中にエラーが発生しました。');
         }
     }
 }

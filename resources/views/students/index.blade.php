@@ -23,8 +23,14 @@
                 <label for="grade">学年:</label>
                 <select id="grade" name="grade">
                     <option value="">選択してください</option>
-                    @foreach([1, 2, 3, 4] as $grade)
-                        <option value="{{ $grade }}" {{ request('grade') == $grade ? 'selected' : '' }}>{{ $grade }}年生</option>
+                    @foreach([1, 2, 3, 4, '卒業生'] as $grade)
+                        <option value="{{ $grade }}" {{ request('grade') == $grade ? 'selected' : '' }}>
+                            @if($grade === '卒業生')
+                                卒業生
+                            @else
+                                {{ $grade }}年生
+                            @endif
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -52,7 +58,13 @@
             <tbody>
                 @forelse($students as $student)
                 <tr>
-                    <td>{{ $student->grade }}年生</td>
+                    <td>
+                        @if ($student->grade === '卒業生')
+                            {{ $student->grade }}
+                        @else
+                            {{ $student->grade }}年生
+                        @endif
+                    </td>
                     <td>{{ $student->name }}</td>
                     <td>
                         @if ($student->img_path)

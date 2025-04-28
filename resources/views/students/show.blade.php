@@ -16,7 +16,13 @@
         <div class="info">
             <div>
                 <label>学年:</label>
-                <span>{{ $student->grade_label ?? ($student->grade . '年生') }}</span>
+                <span>
+                    @if($student->grade === '卒業生')
+                        {{ $student->grade }}
+                    @else
+                        {{ $student->grade }}年生
+                    @endif
+                </span>
             </div>
             <div>
                 <label>名前:</label>

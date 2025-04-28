@@ -48,7 +48,7 @@ Route::get('/students/{student}/sortStudentGrades', [NewStudentController::class
 Route::get('/students/{student}/grades/search', [SchoolGradeController::class, 'search'])->name('students.filterGrades'); // 修正済み
 
 // 学年更新ルート
-Route::post('/students/update-grades', [StudentController::class, 'updateStudentGrades'])->name('students.update-grades');
+Route::post('/students/update-all-grades', [StudentController::class, 'updateAllGrades'])->name('students.update-all-grades'); // **追加**
 
 // 認証が必要なルート
 Route::middleware('auth')->group(function () {

@@ -68,11 +68,11 @@ class SchoolGrade extends Model
         return $query->orderBy('grade', $order);
     }
 
-    // 成績検索メソッド
-    public static function searchGrades($studentId, $grade = null, $term = null, $order = 'asc')
+    // フィルタリング＆ソートメソッド
+    public static function getFilteredAndSortedGrades($studentId, $grade = null, $term = null, $order = 'asc')
     {
         try {
-            $query = self::query()->where('student_id', $studentId);
+            $query = self::where('student_id', $studentId);
 
             if (!empty($grade)) {
                 $query->filterByGrade($grade);
@@ -82,12 +82,11 @@ class SchoolGrade extends Model
                 $query->filterByTerm($term);
             }
 
-            $query->orderByGrade($order);
-
-            return $query->get();
+            return $query->orderBy('grade', $order)->get();
         } catch (\Exception $e) {
-            Log::error('Error retrieving grades.', [
-                'error_message' => $e->getMessage(),
+            Log::error('Error retrieving filtered and sorted grades.', [
+                'student_id' => $studentId,
+                'error_message' => $e->getMessage()
             ]);
             throw new \Exception('Failed to retrieve grades: ' . $e->getMessage());
         }
@@ -97,8 +96,14 @@ class SchoolGrade extends Model
     public static function createGrade(array $data)
     {
         try {
-            $grade = self::create($data);
-            Log::info('Grade created successfully.', ['id' => $grade->id, 'data' => $data]);
+            $validData = collect($data)->only([
+                'student_id', 'grade', 'term', 'japanese', 'math', 'science',
+                'social_studies', 'music', 'home_economics', 'english', 'art',
+                'health_and_physical_education'
+            ])->toArray();
+
+            $grade = self::create($validData);
+            Log::info('Grade created successfully.', ['id' => $grade->id, 'data' => $validData]);
             return $grade;
         } catch (\Exception $e) {
             Log::error('Error creating grade.', ['data' => $data, 'error_message' => $e->getMessage()]);
@@ -126,10 +131,10 @@ class SchoolGrade extends Model
         try {
             $grade = self::findOrFail($id);
             $grade->delete();
-            Log::info('Grade deleted successfully.', ['id' => $id]);
+            Log::info('[SUCCESS] Grade deleted successfully.', ['id' => $id]);
             return true;
         } catch (\Exception $e) {
-            Log::error('Error deleting grade.', ['id' => $id, 'error_message' => $e->getMessage()]);
+            Log::error('[ERROR] Error deleting grade.', ['id' => $id, 'error_message' => $e->getMessage()]);
             throw new \Exception('Failed to delete grade: ' . $e->getMessage());
         }
     }

@@ -74,4 +74,25 @@ class Student extends Model
             throw new \Exception('Failed to update grades: ' . $e->getMessage());
         }
     }
+
+    // **追加: 学生削除のカプセル化**
+    public static function deleteStudent($id)
+    {
+        try {
+            $student = self::find($id);
+
+            if (!$student) {
+                Log::warning('Student not found for deletion.', ['student_id' => $id]);
+                return false;
+            }
+
+            $student->delete();
+
+            Log::info('Student deleted successfully.', ['student_id' => $id]);
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error deleting student.', ['student_id' => $id, 'error_message' => $e->getMessage()]);
+            throw new \Exception('Failed to delete student: ' . $e->getMessage());
+        }
+    }
 }

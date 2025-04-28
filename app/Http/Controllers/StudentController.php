@@ -6,6 +6,7 @@ use App\Http\Requests\StudentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Student;
+use App\SchoolGrade;
 
 class StudentController extends Controller
 {
@@ -30,148 +31,150 @@ class StudentController extends Controller
         return view('students.index', compact('students', 'sortOrder'));
     }
 
-    // 学年を更新するメソッド
-    public function updateStudentGrades()
-    {
-        try {
-            Log::info('UpdateStudentGrades method started.');
-
-            // モデルのビジネスロジックを呼び出し
-            Student::updateGrades();
-
-            Log::info('UpdateStudentGrades method completed.');
-            return redirect()->route('menu.index')->with('success', '学年が更新されました。');
-        } catch (\Exception $e) {
-            Log::error('Error occurred while updating student grades.', ['error_message' => $e->getMessage()]);
-            return redirect()->route('menu.index')->with('error', '学年更新に失敗しました。');
-        }
-    }
-
-    // 学生登録画面を表示するメソッド
+    // 学生作成画面を表示するメソッド
     public function create()
     {
         Log::info('Create method accessed for students.');
-
-        try {
-            $view = view('students.create');
-            Log::info('Response being returned for students.create.', ['view_name' => $view->getName()]);
-            return $view;
-        } catch (\Exception $e) {
-            Log::error('Error occurred while accessing students.create.', ['error_message' => $e->getMessage()]);
-            return redirect()->route('students.index')->with('error', '学生登録画面の表示に失敗しました。');
-        }
+        return view('students.create'); // ビューを返す
     }
 
-    // 学生情報を保存するメソッド
-    public function store(StudentRequest $request)
-    {
-        Log::info('Store method accessed for students.');
+    public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'address' => 'required|string|max:255', // 住所のバリデーションを追加
+        'email' => 'required|email|max:255',
+        'grade' => 'required|integer|min:1|max:12',
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 写真のバリデーション
+        'comment' => 'nullable|string|max:500', // コメントのバリデーション
+    ]);
 
-        try {
-            // バリデーション済みデータを取得
-            $validated = $request->validated();
+    try {
+        // 写真をアップロード
+        $photoPath = $request->file('photo') ? $request->file('photo')->store('photos', 'public') : null;
 
-            // モデルのビジネスロジックを呼び出し
-            $photo = $request->hasFile('photo') ? $request->file('photo') : null;
-            $student = Student::createStudent($validated, $photo);
+        // 学生データを作成
+        $student = Student::create([
+            'name' => $request->name,
+            'address' => $request->address, // 住所を保存する
+            'email' => $request->email,
+            'grade' => $request->grade,
+            'img_path' => $photoPath,
+            'comment' => $request->comment,
+        ]);
 
-            Log::info('Student saved successfully.', ['student_id' => $student->id]);
-            return redirect()->route('students.index')->with('success', '学生が正常に登録されました！');
-        } catch (\Exception $e) {
-            Log::error('Error occurred while storing student.', ['error_message' => $e->getMessage()]);
-            return redirect()->route('students.create')->with('error', '学生の登録中にエラーが発生しました。');
-        }
+        Log::info('Student created successfully.', ['student_id' => $student->id]);
+
+        // 作成完了後、詳細画面にリダイレクト
+        return redirect()->route('students.show', $student->id)->with('success', '学生情報が登録されました。');
+    } catch (\Exception $e) {
+        Log::error('Error creating student.', ['error_message' => $e->getMessage()]);
+        return redirect()->route('students.index')->with('error', '学生情報の登録中にエラーが発生しました。');
     }
-
-    // 学生情報を更新するメソッド
-    public function update(StudentRequest $request, $id)
-    {
-        Log::info('Update method accessed.', ['student_id' => $id]);
-
-        $student = Student::find($id);
-
-        if (!$student) {
-            Log::warning('Student not found for update.', ['student_id' => $id]);
-            return redirect()->route('students.index')->with('error', '指定された学生が見つかりません。');
-        }
-
-        try {
-            // バリデーション済みデータを取得
-            $validated = $request->validated();
-
-            // モデルのビジネスロジックを呼び出し
-            $photo = $request->hasFile('photo') ? $request->file('photo') : null;
-            $student->updateStudent($validated, $photo);
-
-            Log::info('Student updated successfully.', ['student_id' => $student->id]);
-            return redirect()->route('students.show', $student->id)->with('success', '学生情報が正常に更新されました。');
-        } catch (\Exception $e) {
-            Log::error('Error occurred while updating student.', ['error_message' => $e->getMessage()]);
-            return redirect()->back()->with('error', '学生情報の更新に失敗しました。');
-        }
-    }
-
-    // 学生編集画面を表示するメソッド
-    public function edit($id)
-    {
-        Log::info('Edit method accessed.', ['student_id' => $id]);
-
-        $student = Student::find($id);
-
-        if (!$student) {
-            Log::warning('Student not found for editing.', ['student_id' => $id]);
-            return redirect()->route('students.index')->with('error', '学生が見つかりませんでした。');
-        }
-
-        Log::info('Student data retrieved for editing.', ['student_id' => $student->id]);
-        return view('students.edit', compact('student'));
-    }
+}
 
     // 学生詳細を表示するメソッド
     public function show($id)
     {
-        Log::info('Show method accessed.', ['student_id' => $id]);
+        try {
+            // 指定されたIDの学生を取得
+            $student = Student::findOrFail($id);
 
-        // 学生データを取得（成績リレーション込み）
-        $student = Student::with('schoolGrades')->find($id);
+            // 学生に紐づいた成績データを取得
+            $grades = $student->schoolGrades;
 
-        if (!$student) {
-            Log::warning('Student not found.', ['student_id' => $id]);
-            return redirect()->route('students.index')->with('error', '学生が見つかりませんでした。');
+            Log::info('Show method accessed for student and grades.', [
+                'student_id' => $id,
+                'grades_count' => $grades->count(),
+            ]);
+
+            // 学生データと成績データをビューに渡す
+            return view('students.show', compact('student', 'grades'));
+        } catch (\Exception $e) {
+            Log::error('Error retrieving student details or grades.', [
+                'student_id' => $id,
+                'error_message' => $e->getMessage(),
+            ]);
+            return redirect()->route('students.index')->with('error', '学生詳細を取得できませんでした。');
         }
-
-        // 学生に紐づく成績データを取得
-        $grades = $student->schoolGrades;
-
-        Log::info('Student and grades retrieved successfully.', [
-            'student_id' => $student->id,
-            'grades_count' => $grades->count(),
-        ]);
-
-        // ビューにデータを渡す
-        return view('students.show', compact('student', 'grades'));
     }
 
-    // 学生を削除するメソッド
+    // 学生情報を更新するメソッド
+    public function update(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'grade' => 'required|integer|min:1|max:12',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $student = Student::findOrFail($id);
+
+            // 更新可能なフィールドのみを使用
+            $student->update($validatedData);
+
+            Log::info('Student updated successfully.', ['student_id' => $id]);
+
+            // 更新完了後、学生詳細画面にリダイレクト
+            return redirect()->route('students.show', $student->id)->with('success', '学生情報が更新されました。');
+        } catch (\Exception $e) {
+            Log::error('Error updating student.', ['student_id' => $id, 'error_message' => $e->getMessage()]);
+            return redirect()->route('students.index')->with('error', '学生情報の更新中にエラーが発生しました。');
+        }
+    }
+
+    // 学生情報を編集する画面を表示するメソッド
+    public function edit($id)
+    {
+        try {
+            // 指定されたIDの学生を取得
+            $student = Student::findOrFail($id);
+
+            Log::info('Edit form accessed for student.', ['student_id' => $id]);
+
+            // 編集フォームを表示
+            return view('students.edit', compact('student'));
+        } catch (\Exception $e) {
+            Log::error('Error accessing edit form.', ['student_id' => $id, 'error_message' => $e->getMessage()]);
+            return redirect()->route('students.index')->with('error', '編集画面の表示中にエラーが発生しました。');
+        }
+    }
+
+    // 全ての学生の学年を一括更新するメソッド
+    public function updateAllGrades()
+    {
+        try {
+            // 全ての学生を取得
+            $students = Student::all();
+
+            foreach ($students as $student) {
+                if ($student->grade !== '卒業生') {
+                    // 学年を1つ増加。ただし、4を超えたら「卒業生」に設定
+                    $newGrade = $student->grade < 4 ? $student->grade + 1 : '卒業生';
+                    $student->update(['grade' => $newGrade]);
+                }
+            }
+
+            Log::info('All student grades updated successfully.');
+            return redirect()->route('students.index')->with('success', '全ての学生の学年が更新されました。');
+        } catch (\Exception $e) {
+            Log::error('Error updating all student grades.', ['error_message' => $e->getMessage()]);
+            return redirect()->route('students.index')->with('error', '学年更新中にエラーが発生しました。');
+        }
+    }
+
+    // 学生情報を削除するメソッド
     public function destroy($id)
     {
         try {
-            Log::info('Destroy method accessed.', ['student_id' => $id]);
-
-            $student = Student::find($id);
-
-            if (!$student) {
-                Log::warning('Student not found for deletion.', ['student_id' => $id]);
-                return redirect()->route('students.index')->with('error', '学生が見つかりませんでした。');
-            }
-
-            // モデルのビジネスロジックを呼び出し
-            $student->delete();
-
-            Log::info('Student deleted successfully.', ['student_id' => $id]);
+            // モデルのメソッドを利用して削除処理を委譲
+            Student::deleteStudent($id);
             return redirect()->route('students.index')->with('success', '学生が削除されました。');
         } catch (\Exception $e) {
-            Log::error('Error occurred while deleting student.', ['error_message' => $e->getMessage()]);
+            Log::error('Error deleting student.', ['student_id' => $id, 'error_message' => $e->getMessage()]);
             return redirect()->route('students.index')->with('error', '学生の削除中にエラーが発生しました。');
         }
     }
