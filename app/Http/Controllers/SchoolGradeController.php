@@ -188,22 +188,20 @@ class SchoolGradeController extends Controller
      * 成績を削除するメソッド（修正済み） 
      */
     public function destroy($id)
-    {
-        try {
-            Log::info('Destroy method accessed for grade.', ['grade_id' => $id]);
+{
+    try {
+        Log::info('Destroy method accessed for grade.', ['grade_id' => $id]);
 
-            // 成績データを取得し、削除
-            $grade = SchoolGrade::findOrFail($id);
-            $studentId = $grade->student_id; // 学生IDを取得
-            $grade->delete();
+        // `deleteGrade` メソッドを呼び出す
+        $studentId = SchoolGrade::deleteGrade($id);
 
-            Log::info('Grade deleted successfully.', ['grade_id' => $id]);
+        Log::info('Grade deleted successfully.', ['grade_id' => $id]);
 
-            // 削除後、学生詳細画面にリダイレクト
-            return redirect()->route('students.show', $studentId)->with('success', '成績が削除されました。');
-        } catch (\Exception $e) {
-            Log::error('Error occurred while deleting grade.', ['error_message' => $e->getMessage()]);
-            return redirect()->route('students.index')->with('error', '成績の削除中にエラーが発生しました。');
-        }
+        // 削除後、学生詳細画面にリダイレクト
+        return redirect()->route('students.show', $studentId)->with('success', '成績が削除されました。');
+    } catch (\Exception $e) {
+        Log::error('Error occurred while deleting grade.', ['error_message' => $e->getMessage()]);
+        return redirect()->route('students.index')->with('error', '成績の削除中にエラーが発生しました。');
     }
+}
 }

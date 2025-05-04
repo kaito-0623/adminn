@@ -130,10 +130,13 @@ class SchoolGrade extends Model
     {
         try {
             $grade = self::findOrFail($id);
+            $studentId = $grade->student_id; // 削除前に学生IDを取得
             $grade->delete();
-            Log::info('[SUCCESS] Grade deleted successfully.', ['id' => $id]);
-            return true;
-        } catch (\Exception $e) {
+
+            Log::info('[SUCCESS] Grade deleted successfully.', ['id' => $id, 'student_id' => $studentId]);
+
+            return $studentId; // 学生IDを返す
+        }catch (\Exception $e) {
             Log::error('[ERROR] Error deleting grade.', ['id' => $id, 'error_message' => $e->getMessage()]);
             throw new \Exception('Failed to delete grade: ' . $e->getMessage());
         }
