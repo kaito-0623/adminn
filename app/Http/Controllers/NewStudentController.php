@@ -14,12 +14,6 @@ class NewStudentController extends Controller
      */
     public function filterStudentGrades(Request $request, Student $student)
     {
-        Log::info('Filter student grades accessed.', [
-            'student_id' => $student->id,
-            'grade_filter' => $request->input('grade'),
-            'term_filter' => $request->input('term')
-        ]);
-
         // モデルのメソッドを使って成績を取得
         try {
             $grades = SchoolGrade::getFilteredAndSortedGrades(
@@ -27,9 +21,6 @@ class NewStudentController extends Controller
                 $request->input('grade'), // 学年フィルタ
                 $request->input('term')  // 学期フィルタ
             );
-
-            // 成績が取得されたか確認するログ
-            Log::info('Grades retrieved successfully.', ['grades_count' => $grades->count()]);
 
             return view('students.partials.grades_table', compact('grades'));
         } catch (\Exception $e) {
@@ -48,11 +39,6 @@ class NewStudentController extends Controller
      */
     public function sortStudentGrades(Request $request, Student $student)
     {
-        Log::info('Sort student grades accessed.', [
-            'student_id' => $student->id,
-            'sort_order' => $request->input('order', 'asc')
-        ]);
-
         // モデルのメソッドを使って成績を取得
         try {
             $grades = SchoolGrade::getFilteredAndSortedGrades(
@@ -61,10 +47,7 @@ class NewStudentController extends Controller
                 null, // 学期フィルタなし
                 $request->input('order', 'asc') // 並べ替え条件
             );
-
-            // 成績が取得されたか確認するログ
-            Log::info('Grades sorted successfully.', ['grades_count' => $grades->count()]);
-
+            
             return view('students.partials.grades_table', compact('grades'));
         } catch (\Exception $e) {
             // エラーハンドリングとログ出力

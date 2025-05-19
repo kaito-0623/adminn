@@ -7,35 +7,33 @@
     <link rel="stylesheet" href="{{ asset('css/menu_index.css') }}">
 </head>
 <body>
+
+    <!--ヘッダーを追加し、左上にボタンを配置 -->
+    <header class="menu-header">
+        <div class="left-section">
+            <a href="{{ route('users.index') }}" class="user-button">ユーザー管理</a>
+        </div>
+    </header>
     <h1>メニュー画面</h1>
 
     <div class="container">
-        <!-- フラッシュメッセージ表示 -->
-        <div class="flash-message">
-            @if (session('success'))
-                <p class="success">{{ session('success') }}</p>
-            @elseif (session('error'))
-                <p class="error">{{ session('error') }}</p>
-            @endif
-        </div>
-
         <nav>
             <ul>
                 <li>
-                    <a href="{{ route('students.create') }}">学生登録</a>
+                    <a href="{{ route('students.create') }}" class="btn btn-success">学生登録</a>
                 </li>
                 <li>
-                    <a href="{{ route('students.index') }}">学生表示</a>
+                    <a href="{{ route('students.index') }}" class="btn btn-info">学生一覧</a>
                 </li>
                 <li>
-                    <!-- 学年更新ボタンを一括更新の仕組みに変更 -->
                     <form action="{{ route('students.update-all-grades') }}" method="POST">
                         @csrf
-                        <button type="submit">学年更新</button>
+                        <button type="submit" class="btn btn-warning">学年更新</button>
                     </form>
                 </li>
             </ul>
         </nav>
     </div>
+
 </body>
 </html>

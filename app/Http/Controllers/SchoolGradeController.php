@@ -21,11 +21,6 @@ class SchoolGradeController extends Controller
         }
 
         $schoolGrades = SchoolGrade::where('student_id', $studentId)->paginate(10); // ページネーション
-        Log::info('Grades retrieved for rendering:', [
-            'student_id' => $studentId,
-            'grades_count' => $schoolGrades->count()
-        ]);
-
         return view('schoolGrades.index', compact('schoolGrades', 'studentId'));
     }
 
@@ -41,7 +36,7 @@ class SchoolGradeController extends Controller
         }
 
         $student = Student::findOrFail($studentId);
-        Log::info('Create form accessed for student.', ['student_id' => $studentId]);
+        
         return view('schoolGrades.create', compact('student'));
     }
 
@@ -67,7 +62,6 @@ class SchoolGradeController extends Controller
 
         try {
             SchoolGrade::create($request->all());
-            Log::info('Grades successfully created.', ['student_id' => $request->student_id]);
             return redirect()->route('students.show', $request->student_id)->with('success', '成績が登録されました。');
         } catch (\Exception $e) {
             Log::error('Error storing grades.', ['message' => $e->getMessage()]);
@@ -83,8 +77,6 @@ class SchoolGradeController extends Controller
         try {
             $student = Student::findOrFail($id);
             $grades = SchoolGrade::where('student_id', $id)->get();
-
-            Log::info('Student and grades details retrieved.', ['student_id' => $id, 'grades_count' => $grades->count()]);
 
             return view('students.show', compact('student', 'grades'));
         } catch (\Exception $e) {
@@ -126,11 +118,6 @@ class SchoolGradeController extends Controller
                 ->orderByGrade($request->input('order', 'asc'))
                 ->get();
 
-            Log::info('Search executed successfully.', [
-                'student_id' => $studentId,
-                'grades_count' => $grades->count(),
-            ]);
-
             $student = Student::findOrFail($studentId);
             return view('students.show', compact('grades', 'student'));
         } catch (\Exception $e) {
@@ -146,7 +133,7 @@ class SchoolGradeController extends Controller
     {
         try {
             $schoolGrade = SchoolGrade::findOrFail($id);
-            Log::info('Edit form accessed for grade.', ['grade_id' => $id]);
+            
             return view('schoolGrades.edit', compact('schoolGrade'));
         } catch (\Exception $e) {
             Log::error('Error accessing edit form.', ['message' => $e->getMessage()]);
@@ -176,7 +163,7 @@ class SchoolGradeController extends Controller
         try {
             // 安全なデータを使用して成績を更新
             $updatedGrade = SchoolGrade::updateGrade($id, $validatedData);
-            Log::info('Grade successfully updated.', ['grade_id' => $id]);
+            
             return redirect()->route('students.show', $updatedGrade->student_id)->with('success', '成績が更新されました。');
         } catch (\Exception $e) {
             Log::error('Error updating grade.', ['message' => $e->getMessage()]);
@@ -190,8 +177,6 @@ class SchoolGradeController extends Controller
     public function destroy($id)
 {
     try {
-        Log::info('Destroy method accessed for grade.', ['grade_id' => $id]);
-
         // `deleteGrade` メソッドを呼び出す
         $studentId = SchoolGrade::deleteGrade($id);
 

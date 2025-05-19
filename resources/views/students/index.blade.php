@@ -23,9 +23,9 @@
                 <label for="grade">学年:</label>
                 <select id="grade" name="grade">
                     <option value="">選択してください</option>
-                    @foreach([1, 2, 3, 4, '卒業生'] as $grade)
+                    @foreach([1, 2, 3, 4, 5] as $grade)
                         <option value="{{ $grade }}" {{ request('grade') == $grade ? 'selected' : '' }}>
-                            @if($grade === '卒業生')
+                            @if($grade == 5)
                                 卒業生
                             @else
                                 {{ $grade }}年生
@@ -59,8 +59,8 @@
                 @forelse($students as $student)
                 <tr>
                     <td>
-                        @if ($student->grade === '卒業生')
-                            {{ $student->grade }}
+                        @if ($student->grade == 5)
+                            卒業生
                         @else
                             {{ $student->grade }}年生
                         @endif

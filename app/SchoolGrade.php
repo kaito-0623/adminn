@@ -103,7 +103,6 @@ class SchoolGrade extends Model
             ])->toArray();
 
             $grade = self::create($validData);
-            Log::info('Grade created successfully.', ['id' => $grade->id, 'data' => $validData]);
             return $grade;
         } catch (\Exception $e) {
             Log::error('Error creating grade.', ['data' => $data, 'error_message' => $e->getMessage()]);
@@ -117,7 +116,6 @@ class SchoolGrade extends Model
         try {
             $grade = self::findOrFail($id);
             $grade->update($data);
-            Log::info('Grade updated successfully.', ['id' => $id, 'data' => $data]);
             return $grade;
         } catch (\Exception $e) {
             Log::error('Error updating grade.', ['id' => $id, 'error_message' => $e->getMessage()]);
@@ -132,8 +130,6 @@ class SchoolGrade extends Model
             $grade = self::findOrFail($id);
             $studentId = $grade->student_id; // 削除前に学生IDを取得
             $grade->delete();
-
-            Log::info('[SUCCESS] Grade deleted successfully.', ['id' => $id, 'student_id' => $studentId]);
 
             return $studentId; // 学生IDを返す
         }catch (\Exception $e) {

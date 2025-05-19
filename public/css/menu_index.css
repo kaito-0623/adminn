@@ -5,6 +5,35 @@ body {
     padding: 0;
 }
 
+.menu-header {
+    display: flex;
+    justify-content: flex-start; /* ⭐ 左寄せに変更 */
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+
+.left-section {
+    margin-right: 20px; /* ⭐ ボタンとタイトルの間に余白を追加 */
+}
+
+
+.user-button {
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    text-decoration: none;
+}
+
+.user-button:hover {
+    background-color: #e0e0e0;
+}
+
+
 h1 {
     text-align: center;
     color: #333;

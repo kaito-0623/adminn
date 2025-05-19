@@ -9,6 +9,7 @@ use App\Http\Controllers\SchoolGradeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\NewStudentController;
+use App\Http\Controllers\UserController; // ✅ 追加
 use Illuminate\Support\Facades\Auth;
 
 // トップページ
@@ -17,7 +18,8 @@ Route::get('/', function () {
 });
 
 // 認証ルート
-Auth::routes();
+Auth::routes(['verify' => true]);
+
 
 // ゲスト用ルート
 Route::middleware('guest')->group(function () {
@@ -54,6 +56,14 @@ Route::post('/students/update-all-grades', [StudentController::class, 'updateAll
 Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
+
+    // ✅ ユーザー情報関連ルート（追加）
+    // ✅ ユーザー一覧ページのルートを追加
+    Route::get('/users', [UserController::class, 'index'])->name('users.index'); // ⭐ 追加
+    Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
+    Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // 学生登録関連ルート
     Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
