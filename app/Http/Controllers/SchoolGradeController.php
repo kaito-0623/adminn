@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\SchoolGrade; // モデル
 use App\Student; // 学生モデル
+use App\Http\Requests\SchoolGradeRequest; 
+
 
 class SchoolGradeController extends Controller
 {
@@ -43,31 +45,24 @@ class SchoolGradeController extends Controller
     /** 
      * 成績を保存するメソッド 
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'grade' => 'required',
-            'term' => 'required',
-            'japanese' => 'required|numeric|min:0|max:100',
-            'math' => 'required|numeric|min:0|max:100',
-            'science' => 'required|numeric|min:0|max:100',
-            'social_studies' => 'required|numeric|min:0|max:100',
-            'music' => 'required|numeric|min:0|max:100',
-            'home_economics' => 'required|numeric|min:0|max:100',
-            'english' => 'required|numeric|min:0|max:100',
-            'art' => 'required|numeric|min:0|max:100',
-            'health_and_physical_education' => 'required|numeric|min:0|max:100',
+    public function store(SchoolGradeRequest $request)
+{
+    try {
+        // `validated()` を使ってバリデーション済みデータを取得し、 `createGrade()` に渡す
+        SchoolGrade::createGrade($request->validated());
+
+        return redirect()
+            ->route('students.show', $request->student_id)
+            ->with('success', '成績が登録されました。');
+    } catch (\Exception $e) {
+        Log::error('Store method failed.', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
 
-        try {
-            SchoolGrade::create($request->all());
-            return redirect()->route('students.show', $request->student_id)->with('success', '成績が登録されました。');
-        } catch (\Exception $e) {
-            Log::error('Error storing grades.', ['message' => $e->getMessage()]);
-            return redirect()->back()->with('error', '成績の登録に失敗しました。');
-        }
+        return redirect()->back()->with('error', 'エラーが発生しました。');
     }
+}
 
     /** 
      * 学生詳細画面で成績一覧を渡すメソッド 
@@ -144,33 +139,24 @@ class SchoolGradeController extends Controller
     /** 
      * 成績を更新するメソッド（修正済み） 
      */
-    public function update(Request $request, $id)
-    {
-        $validatedData = $request->validate([
-            'grade' => 'required',
-            'term' => 'required',
-            'japanese' => 'required|numeric|min:0|max:100',
-            'math' => 'required|numeric|min:0|max:100',
-            'science' => 'required|numeric|min:0|max:100',
-            'social_studies' => 'required|numeric|min:0|max:100',
-            'music' => 'required|numeric|min:0|max:100',
-            'home_economics' => 'required|numeric|min:0|max:100',
-            'english' => 'required|numeric|min:0|max:100',
-            'art' => 'required|numeric|min:0|max:100',
-            'health_and_physical_education' => 'required|numeric|min:0|max:100',
+    public function update(SchoolGradeRequest $request, $id)
+{
+    try {
+        // `validated()` を使用してバリデーション済みデータを取得し、 `updateGrade()` に渡す
+        $updatedGrade = SchoolGrade::updateGrade($id, $request->validated());
+
+        return redirect()
+            ->route('students.show', $updatedGrade->student_id)
+            ->with('success', '成績が更新されました。');
+    } catch (\Exception $e) {
+        Log::error('Error updating grade.', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
 
-        try {
-            // 安全なデータを使用して成績を更新
-            $updatedGrade = SchoolGrade::updateGrade($id, $validatedData);
-            
-            return redirect()->route('students.show', $updatedGrade->student_id)->with('success', '成績が更新されました。');
-        } catch (\Exception $e) {
-            Log::error('Error updating grade.', ['message' => $e->getMessage()]);
-            return redirect()->back()->with('error', '成績の更新に失敗しました。');
-        }
+        return redirect()->back()->with('error', 'エラーが発生しました。');
     }
-
+}
     /** 
      * 成績を削除するメソッド（修正済み） 
      */

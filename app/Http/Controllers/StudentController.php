@@ -35,24 +35,19 @@ class StudentController extends Controller
 
 
     //Model委譲とカプセル化OK
-    public function store(Request $request)
+    public function store(StudentRequest $request)
 {
-    $validatedData = $request->validate([
-        'name' => 'required|string|max:255',
-        'address' => 'required|string|max:255',
-        'email' => 'required|email|max:255',
-        'grade' => 'required|integer|min:1|max:12',
-        'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'comment' => 'nullable|string|max:500',
-    ]);
-
     try {
-        // **モデルのメソッドに処理を委譲**
-        $student = Student::createStudent($validatedData, $request->file('photo'));
+        // `validated()` を使用してバリデーション済みデータを取得し、 `createStudent()` に渡す
+        $student = Student::createStudent($request->validated(), $request->file('photo'));
 
         return redirect()->route('students.show', $student->id)->with('success', '学生情報が登録されました。');
     } catch (\Exception $e) {
-        Log::error('Error creating student.', ['error_message' => $e->getMessage()]);
+        Log::error('Error creating student.', [
+            'error_message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
         return redirect()->route('students.index')->with('error', '学生情報の登録中にエラーが発生しました。');
     }
 }
@@ -60,9 +55,6 @@ class StudentController extends Controller
 
     /**
  * 学生情報と成績データを表示するメソッド
- * 
- * @param int $id 学生ID
- * @return \Illuminate\Http\Response
  */
 //Model委譲とカプセル化OK
 public function show($id)
@@ -84,25 +76,21 @@ public function show($id)
     }
 }
 
-    public function update(Request $request, $id)
+    public function update(StudentRequest $request, $id)
 {
-    $validatedData = $request->validate([
-    'name' => 'required|string|max:255',
-    'address' => 'required|string|max:255',
-    'email' => 'required|email|max:255',
-    'grade' => 'required|integer|min:1|max:12',
-    'photo' => $request->hasFile('photo') ? ['image', 'mimes:jpeg,png,jpg,gif', 'max:2048'] : [], 
-    'comment' => 'nullable|string|max:500',
-    ]);
-
     try {
         // **モデルのメソッドに処理を委譲**
         $student = Student::findOrFail($id);
-        $student->updateStudent($validatedData, $request->file('photo')); 
+        $student->updateStudent($request->validated(), $request->file('photo'));
 
         return redirect()->route('students.show', $student->id)->with('success', '学生情報が更新されました。');
     } catch (\Exception $e) {
-        Log::error('Error updating student.', ['student_id' => $id, 'error_message' => $e->getMessage()]);
+        Log::error('Error updating student.', [
+            'student_id' => $id,
+            'error_message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
         return redirect()->route('students.index')->with('error', '学生情報の更新中にエラーが発生しました。');
     }
 }

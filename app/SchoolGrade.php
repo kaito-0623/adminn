@@ -94,21 +94,15 @@ class SchoolGrade extends Model
 
     // 成績作成メソッド
     public static function createGrade(array $data)
-    {
-        try {
-            $validData = collect($data)->only([
-                'student_id', 'grade', 'term', 'japanese', 'math', 'science',
-                'social_studies', 'music', 'home_economics', 'english', 'art',
-                'health_and_physical_education'
-            ])->toArray();
-
-            $grade = self::create($validData);
-            return $grade;
-        } catch (\Exception $e) {
-            Log::error('Error creating grade.', ['data' => $data, 'error_message' => $e->getMessage()]);
-            throw new \Exception('Failed to create grade: ' . $e->getMessage());
-        }
+{
+    try {
+        // ここで $data はすでにバリデーション済みなので、そのまま保存
+        return self::create($data);
+    } catch (\Exception $e) {
+        Log::error('Error creating grade.', ['data' => $data, 'error_message' => $e->getMessage()]);
+        throw new \Exception('Failed to create grade: ' . $e->getMessage());
     }
+}
 
     // 成績更新メソッド
     public static function updateGrade($id, array $data)

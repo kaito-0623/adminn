@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\User;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\UserRequest;
 
 class UserController extends Controller
 {
@@ -41,22 +42,22 @@ class UserController extends Controller
     }
 
     /** ユーザー情報を更新 */
-    public function update(Request $request, $id)
-    {
-        $validatedData = $request->validate([
-            'user_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+    public function update(UserRequest $request, $id)
+{
+    try {
+        User::updateUserInfo($id, $request->validated()); //Modelから呼び出す
+
+        return redirect()->route('users.show', $id)->with('success', 'ユーザー情報が更新されました。');
+    } catch (\Exception $e) {
+        Log::error('Error updating user.', [
+            'user_id' => $id,
+            'error_message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
 
-        try {
-            User::updateUserInfo($id, $validatedData); //モデルのメソッドを利用
-            
-            return redirect()->route('users.show', $id)->with('success', 'ユーザー情報が更新されました。');
-        } catch (\Exception $e) {
-            Log::error('Error updating user.', ['user_id' => $id, 'error_message' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'ユーザー情報の更新に失敗しました。');
-        }
+        return redirect()->back()->with('error', 'ユーザー情報の更新に失敗しました。');
     }
+}
 
     /** ユーザーを削除 */
     public function destroy($id)
